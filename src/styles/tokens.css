@@ -1,0 +1,27 @@
+/*
+ * 底色 token 表——唯一出处（00.5-UI布局规格 §二 表，2026-10-07 拍板：纸白＋夜间两档；
+ * sepia 留档不建枚举值）。阅读底色**不跟壳主题**（用户拍板的有意例外）：
+ * 色值只许出现在本文件这一处，其余全引变量；换档 = 根类 data-pdf-bg 一处生效。
+ * 自定义属性挂在自有命名空间类 .pdf-reader 之下（⛔ 禁定义 ldk-*）。
+ */
+.pdf-reader-root[data-pdf-bg="paper"] {
+  --pdf-bg-surface: #f1f2f0;
+  --pdf-bg-page: #ffffff;
+  --pdf-ink-ui: #1f2430;
+  --pdf-ink-muted: #6b7280;
+  --pdf-border-page: #d8d2c6;
+  --pdf-accent: #2563eb;
+  --pdf-hit: #fde68a;
+  --pdf-danger: #dc2626;
+}
+
+.pdf-reader-root[data-pdf-bg="night"] {
+  --pdf-bg-surface: #0f172a;
+  --pdf-bg-page: #192134;
+  --pdf-ink-ui: #e2e8f0;
+  --pdf-ink-muted: #94a3b8;
+  --pdf-border-page: rgba(255, 255, 255, 0.08);
+  --pdf-accent: #60a5fa; /* 夜间提亮保对比 */
+  --pdf-hit: #92600a;
+  --pdf-danger: #f87171;
+}

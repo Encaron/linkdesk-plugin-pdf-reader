@@ -1,7 +1,7 @@
 /**
  * pdf.js 文档加载与生命周期（页面对象 destroy() 纪律——mathematic-inc/vscode-pdf 借鉴点）。
  *
- * 引擎面只经本聚合器露面：视图拿 PdfDocument（numPages / renderPage / destroy），
+ * 引擎面只经本聚合器露面：视图拿 PdfDocument（numPages / pageSize / renderPage / destroy），
  * 不摸 getDocument 等原语；对壳只经 window.linkdesk.filesystem.readBinaryFile 一层。
  *
  * worker 生命周期：每份文档一个 worker（显式 port 的 PDFWorker——pdf.js 对外部 port 不代管
@@ -11,21 +11,59 @@ import { getDocument, PDFWorker } from "pdfjs-dist";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 import { PDFJS_CMAPS_URL, PDFJS_STANDARD_FONTS_URL, createPdfWorker } from "../../constants";
 
+/** scale 1 下的页面尺寸（pt）——布局与缩放换算统一用它 */
+export interface PageSize {
+  width: number;
+  height: number;
+}
+
+/** 打开失败的分类——错误态两式（损坏/加密）按 kind 选，加载态照 00.5 §三 */
+export type PdfOpenErrorKind = "encrypted" | "invalid" | "read" | "unknown";
+
+export class PdfOpenError extends Error {
+  constructor(
+    readonly kind: PdfOpenErrorKind,
+    message: string,
+  ) {
+    super(message);
+    this.name = "PdfOpenError";
+  }
+}
+
 /** 一份已打开的 pdf 文档——调用方用完必须 destroy()（keep-alive 下随卸载/换文件释放）。 */
 export interface PdfDocument {
   /** 总页数（本仓页码一律 1-based；pdf.js 亦 1-based，引擎边界零换算） */
   readonly numPages: number;
-  /** 把第 pageNumber 页（1-based）按 scale 1 渲染进 canvas（缩放档位归一属 T3） */
-  renderPage(pageNumber: number, canvas: HTMLCanvasElement): Promise<void>;
+  /** 第 pageNumber 页（1-based）的 scale 1 尺寸——虚拟化布局用，pdf.js 内部有页缓存 */
+  pageSize(pageNumber: number): Promise<PageSize>;
+  /**
+   * 把第 pageNumber 页渲进 canvas：scale 是 CSS 像素倍率（位图再乘 devicePixelRatio 保清晰），
+   * 位图与 style 尺寸都由本方法设置；返回该页 scale 1 尺寸（供布局校准）。
+   */
+  renderPage(pageNumber: number, canvas: HTMLCanvasElement, scale: number): Promise<PageSize>;
   /** 释放文档与 worker——幂等 */
   destroy(): Promise<void>;
 }
 
-/** 读文件字节 → pdf.js 解析。worker 打不开即抛（不塞主线程凑合，01-任务书 §六）。 */
+/**
+ * 读文件字节 → pdf.js 解析。worker 打不开即抛（不塞主线程凑合，01-任务书 §六）。
+ *
+ * ⛔ 不挂「加载进度」回调：pdf.js 在整段字节直接交给它的形态下**一次 onProgress 都不发**
+ * （2026-10-07 实测 95MB 文件事件数 = 0——进度只在其网络流形态下才有），壳侧 readBinaryFile
+ * 又是一次性 IPC（无 size / 无分块读）⇒ 本项目**没有任何真进度可报**。留个永不触发的回调
+ * 只会喂出一条永远停在 0% 的进度条（死代码 ＋ 骗人），故整条进度面不设。
+ */
 export async function loadPdf(filePath: string): Promise<PdfDocument> {
-  const data = await window.linkdesk.filesystem.readBinaryFile(filePath);
+  let data: unknown;
+  try {
+    data = await window.linkdesk.filesystem.readBinaryFile(filePath);
+  } catch (err) {
+    throw new PdfOpenError("read", err instanceof Error ? err.message : String(err));
+  }
+
   const rawWorker = createPdfWorker();
   const worker = new PDFWorker({ port: rawWorker });
+  let doc: PDFDocumentProxy;
   const loadingTask = getDocument({
     data,
     worker,
@@ -35,18 +73,40 @@ export async function loadPdf(filePath: string): Promise<PdfDocument> {
     // cmap/标准字体在池域（主线程）取——linkdesk:// 资产 fetch 不进 worker 沙箱
     useWorkerFetch: false,
   });
-  const doc: PDFDocumentProxy = await loadingTask.promise;
+  try {
+    doc = await loadingTask.promise;
+  } catch (err) {
+    // 失败路径也要收掉 worker（一文档一线程，不泄漏）
+    void loadingTask.destroy().catch(() => {});
+    rawWorker.terminate();
+    const name = err instanceof Error ? err.name : "";
+    const message = err instanceof Error ? err.message : String(err);
+    if (name === "PasswordException") throw new PdfOpenError("encrypted", message);
+    if (name === "InvalidPDFException") throw new PdfOpenError("invalid", message);
+    throw new PdfOpenError("unknown", message);
+  }
+
   let destroyed = false;
   return {
     numPages: doc.numPages,
-    async renderPage(pageNumber, canvas) {
+    async pageSize(pageNumber) {
       const page = await doc.getPage(pageNumber);
       const viewport = page.getViewport({ scale: 1 });
+      return { width: viewport.width, height: viewport.height };
+    },
+    async renderPage(pageNumber, canvas, scale) {
+      const page = await doc.getPage(pageNumber);
+      const base = page.getViewport({ scale: 1 });
+      const dpr = window.devicePixelRatio || 1;
+      const viewport = page.getViewport({ scale: scale * dpr });
       canvas.width = Math.floor(viewport.width);
       canvas.height = Math.floor(viewport.height);
+      canvas.style.width = `${Math.floor(base.width * scale)}px`;
+      canvas.style.height = `${Math.floor(base.height * scale)}px`;
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("canvas 2d context unavailable");
       await page.render({ canvasContext: ctx, viewport }).promise;
+      return { width: base.width, height: base.height };
     },
     async destroy() {
       if (destroyed) return;

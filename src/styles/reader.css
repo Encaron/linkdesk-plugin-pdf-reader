@@ -1,0 +1,279 @@
+/*
+ * PDF 阅读器组件样式（T3 M1 主体，照 00.5 §一/§三 ＋ 06-设计图 §B/§C）。
+ * 纪律：阅读区色值唯一出处 = tokens.css，这里只引 var(--pdf-*)；工具栏/状态条消费壳主题
+ * token（跟主题——切壳主题阅读区纹丝不动，验收句）；字号 var(--font-size-*)；
+ * 类名一律 pdf-reader- 前缀、状态类复合、@keyframes 带前缀（一张样式表全局共享）。
+ */
+
+.pdf-reader-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-family: inherit;
+}
+
+/* ── 工具栏（40px，跟壳主题）── */
+.pdf-reader-toolbar {
+  height: 40px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  background: var(--bg-toolbar);
+  border-bottom: 1px solid var(--separator);
+}
+
+.pdf-reader-toolbar-sep {
+  width: 1px;
+  height: 18px;
+  flex: none;
+  background: var(--separator);
+  margin: 0 6px;
+}
+
+.pdf-reader-tbtn {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.pdf-reader-tbtn:hover:not(:disabled) {
+  background: var(--hover-overlay);
+  color: var(--text-primary);
+}
+.pdf-reader-tbtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.pdf-reader-tbtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.pdf-reader-tbtn-wide {
+  height: 28px;
+  padding: 0 8px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.pdf-reader-tbtn-wide:hover {
+  background: var(--hover-overlay);
+  color: var(--text-primary);
+}
+.pdf-reader-tbtn-wide.active {
+  background: var(--bg-card);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+.pdf-reader-tbtn-wide:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.pdf-reader-pagebox {
+  height: 28px;
+  min-width: 74px;
+  box-sizing: border-box;
+  padding: 0 8px;
+  text-align: center;
+  font-size: var(--font-size-xs);
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.pdf-reader-pagebox:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.pdf-reader-pct {
+  height: 28px;
+  min-width: 44px;
+  padding: 0 6px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.pdf-reader-pct:hover {
+  background: var(--hover-overlay);
+  color: var(--text-primary);
+}
+.pdf-reader-pct:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* ── 阅读区（固定底色，不跟壳主题）── */
+.pdf-reader-surface {
+  flex: 1;
+  overflow: auto;
+  outline: none;
+  background: var(--pdf-bg-surface);
+}
+
+.pdf-reader-pages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0; /* PAGE_GAP */
+  min-width: fit-content;
+}
+
+.pdf-reader-page-card {
+  flex: none;
+  box-sizing: border-box;
+  background: var(--pdf-bg-page);
+  border: 1px solid var(--pdf-border-page);
+  border-radius: 2px;
+  box-shadow: var(--shadow-hairline);
+  overflow: hidden;
+}
+.pdf-reader-page-card + .pdf-reader-page-card {
+  margin-top: 16px; /* PAGE_GAP——与 utils/pagination.ts 同一常量 */
+}
+
+.pdf-reader-page-canvas {
+  display: block;
+}
+/* 夜间档纸面文字反转亮度（不反色图——00.5 §二 token 表口径） */
+.pdf-reader-root[data-pdf-bg="night"] .pdf-reader-page-canvas {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* ── 加载骨架 ── */
+.pdf-reader-loading {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: var(--pdf-bg-surface);
+}
+.pdf-reader-loading-card {
+  width: 190px;
+  height: 110px;
+  border-radius: 4px;
+  background: var(--pdf-bg-page);
+  border: 1px solid var(--pdf-border-page);
+  animation: pdf-reader-loading-pulse 1.4s ease-in-out infinite;
+}
+@keyframes pdf-reader-loading-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+.pdf-reader-loading-bar {
+  width: 190px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--pdf-border-page);
+  overflow: hidden;
+  position: relative;
+}
+.pdf-reader-loading-bar.indeterminate::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  background: var(--pdf-accent);
+  animation: pdf-reader-loading-slide 1.2s ease-in-out infinite;
+}
+@keyframes pdf-reader-loading-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(350%);
+  }
+}
+.pdf-reader-loading-text {
+  font-size: var(--font-size-xs);
+  color: var(--pdf-ink-muted);
+}
+
+/* ── 错误态两式（BinaryNotice 同款骨架）── */
+.pdf-reader-error {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+  background: var(--pdf-bg-surface);
+}
+.pdf-reader-error-icon {
+  width: 30px;
+  height: 30px;
+  color: var(--pdf-danger);
+}
+.pdf-reader-error-title {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--pdf-ink-ui);
+}
+.pdf-reader-error-desc {
+  font-size: var(--font-size-xs);
+  color: var(--pdf-ink-muted);
+}
+/* 底层原话（读取/未知失败才有）——给人排查用，别拿它当给用户看的文案 */
+.pdf-reader-error-detail {
+  max-width: 480px;
+  font-size: var(--font-size-xs);
+  color: var(--pdf-ink-muted);
+  opacity: 0.75;
+  word-break: break-word;
+}
+.pdf-reader-error-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* ── 状态条（24px，跟壳主题）── */
+.pdf-reader-status {
+  height: 24px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  background: var(--bg-toolbar);
+  border-top: 1px solid var(--separator);
+}
+
+/* ── 空源提示（未带文件时）── */
+.pdf-reader-hint {
+  padding: 24px;
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
