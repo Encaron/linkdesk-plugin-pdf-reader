@@ -1,6 +1,6 @@
 /*
- * PDF 阅读器组件样式（T3 M1 主体，照 00.5 §一/§三 ＋ 06-设计图 §B/§C）。
- * 纪律：阅读区色值唯一出处 = tokens.css，这里只引 var(--pdf-*)；工具栏/状态条消费壳主题
+ * PDF 阅读器组件样式（T3 M1 主体，照 00.5 §一/§三 ＋ 06-设计图 §B/§C；T5 补文本层/命中/搜索条）。
+ * 纪律：阅读区色值唯一出处 = tokens.css，这里只引 var(--pdf-*)；工具栏/状态条/搜索条消费壳主题
  * token（跟主题——切壳主题阅读区纹丝不动，验收句）；字号 var(--font-size-*)；
  * 类名一律 pdf-reader- 前缀、状态类复合、@keyframes 带前缀（一张样式表全局共享）。
  */
@@ -124,8 +124,17 @@
 }
 
 /* ── 阅读区（固定底色，不跟壳主题）── */
+/* 阅读区壳：搜索条是浮在它之上的绝对层（⛔ 不排进布局——排进去开条就挤矮阅读区、适宽重算跳缩放） */
+.pdf-reader-body {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+}
+
 .pdf-reader-surface {
   flex: 1;
+  min-width: 0;
   overflow: auto;
   outline: none;
   background: var(--pdf-bg-surface);
@@ -141,6 +150,7 @@
 
 .pdf-reader-page-card {
   flex: none;
+  position: relative; /* 文本层（绝对定位叠加）的定位上下文 */
   box-sizing: border-box;
   background: var(--pdf-bg-page);
   border: 1px solid var(--pdf-border-page);
@@ -276,4 +286,186 @@
   padding: 24px;
   font-size: var(--font-size-xs);
   color: var(--text-muted);
+}
+
+/* ══ 文本层（T5：划选复制）═════════════════════════════════════════════════════
+ * pdf.js `TextLayer` 原语认一套 CSS 契约（源头 = pdfjs-dist/web/pdf_viewer.css 的
+ * `.textLayer` 块与 `.pdfViewer .page` 上的变量组，2026-10-07 逐条核对 6.4.299 实装）。
+ * 本块是那套契约的**改名port**：类名换成本仓命名空间、按本仓无 markedContent 的取数口径
+ * （`constants.ts` TEXT_CONTENT_OPTIONS 只关归一化）砍掉 `.markedContent` 相关分支。
+ *
+ * 🔴 四条不能动的口径（动了就是「能选但选不准 / 字与框错位」）：
+ *   ① `--scale-factor` 由 `services/textLayer/render.ts` 按页写在内层元素上（CSS 倍率，
+ *      **⛔ 不是 dpr**）——`--total-scale-factor` 必须与它**同一个元素**上算：自定义属性里的
+ *      `var()` 在**声明它的那个元素**上就替换掉了，挂到祖先（page-card）会因那里读不到
+ *      `--scale-factor` 而整条作废，层宽高退回 auto（本仓 page-card 尺寸恰好兜住，但
+ *      `--font-height` 那条链会一起断——字全挤成 1px）。
+ *   ② 定位百分比（left/top 是 `% of pageWidth/pageHeight`）靠**层盒 = total-scale-factor ×
+ *      页面尺寸**才落到正确像素——所以 `setLayerDimensions` 写进来的 width/height 不能被
+ *      自己覆盖（本块只给 inset 定位，不给 width/height）。
+ *   ③ 只给**直接子元素**上绝对定位：命中高亮是把子串包进 `<span>` 塞在字块**里面**的
+ *      （`services/textLayer/highlight.ts`）——用后代选择器会把这层内嵌 span 也拽成绝对定位，
+ *      整段排版当场散架。
+ *   ④ `user-select: text` 必须显式写：壳根 `html, body, #root, #pool-root` 是
+ *      `user-select: none`，不写这里就**一个字符都拖不选**（判据句「划选复制出文字」当场红）。
+ */
+.pdf-reader-text-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: clip;
+  text-align: initial;
+  line-height: 1;
+  letter-spacing: normal;
+  word-spacing: normal;
+  text-size-adjust: none;
+  forced-color-adjust: none;
+  transform-origin: 0 0;
+  user-select: text;
+
+  /* ② 的变量组：`--scale-factor` 由 render.ts 写在本元素上，故这条链在本元素上成立 */
+  --user-unit: 1;
+  --total-scale-factor: calc(var(--scale-factor) * var(--user-unit));
+  --scale-round-x: 1px;
+  --scale-round-y: 1px;
+  --min-font-size: 1;
+  --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+  --min-font-size-inv: calc(1 / var(--min-font-size));
+}
+
+.pdf-reader-text-layer > :is(span, br) {
+  position: absolute;
+  color: transparent;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+  user-select: text;
+
+  /* `--font-height`（该字块的字号，px）与 `--scale-x` / `--rotate` 由 pdf.js 逐字写内联 */
+  --font-height: 0;
+  font-size: calc(var(--text-scale-factor) * var(--font-height));
+  --scale-x: 1;
+  --rotate: 0deg;
+  transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
+}
+
+/* 划选底色走本仓 `--pdf-accent`（00.5 §二 token 表：选中/命中/焦点环）——半透明是**必须**的：
+   本层浮在 canvas 之上，不透明底会把底下真正的字形整个盖没。文字保持透明（⛔ 不要字：
+   壳的全局 ::selection 会给它上色，两层字重叠就是毛边）。 */
+.pdf-reader-text-layer ::selection {
+  background: color-mix(in srgb, var(--pdf-accent) 40%, transparent);
+  color: transparent;
+}
+.pdf-reader-text-layer br::selection {
+  background: transparent;
+}
+
+/* ══ 搜索命中（T5：页内/全文档搜索）═══════════════════════════════════════════
+ * 命中底复用 `--pdf-hit`、当前命中复用 `--pdf-accent`（都是 00.5 §二 表里的既有 token，
+ * ⛔ 本格不新增任何色值）；同样必须半透明——底下的字形要透出来（见上条同理）。
+ * 两类命中的**形状差异不靠颜色单打**：当前命中另加一圈同色描边（色弱/夜间档下也分得出
+ * 「我在第几处」，不只靠色相）。
+ */
+.pdf-reader-hit {
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--pdf-hit) 55%, transparent);
+}
+.pdf-reader-hit-current {
+  background: color-mix(in srgb, var(--pdf-accent) 45%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--pdf-accent) 65%, transparent);
+}
+
+/* ══ 搜索浮条（T5；00.5 §四：工具栏下方浮条，Enter 下一处 / Shift+Enter 上一处）═════════
+ * 浮在 `.pdf-reader-body` 右上（chrome，跟壳主题——与工具栏/状态条同族）。
+ * 🔴 绝对定位是**功能要求**不是美观：见 components/SearchBar.tsx 头注（排进布局 = 一开搜索就跳缩放）。
+ */
+.pdf-reader-search {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  z-index: 10;
+  max-width: calc(100% - 24px);
+  height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 6px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-float);
+  color: var(--text-primary);
+}
+/* 焦点环画在整条上（条内元素贴边，逐颗画会把圆角切碎；条内焦点一定看得见） */
+.pdf-reader-search:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.pdf-reader-search-glass {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.pdf-reader-search-input {
+  flex: 1 1 auto;
+  width: 168px;
+  min-width: 0;
+  height: 26px;
+  padding: 0 2px;
+  border: none;
+  background: transparent;
+  font-size: var(--font-size-xs);
+  color: var(--text-primary);
+  outline: none;
+}
+.pdf-reader-search-input::placeholder {
+  color: var(--text-muted);
+}
+.pdf-reader-search-input:disabled {
+  cursor: default;
+}
+
+/* 命中数直读「3/17」——等宽数字，扫的时候不跳字宽 */
+.pdf-reader-search-count {
+  flex: none;
+  min-width: 42px;
+  padding: 0 2px;
+  text-align: center;
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.pdf-reader-search-btn {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.pdf-reader-search-btn:hover:not(:disabled) {
+  background: var(--hover-overlay);
+  color: var(--text-primary);
+}
+.pdf-reader-search-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.pdf-reader-search-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }

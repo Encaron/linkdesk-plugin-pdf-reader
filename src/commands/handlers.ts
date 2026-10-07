@@ -389,6 +389,41 @@ export async function toggleSidebar(...args: unknown[]): Promise<CmdReply> {
   };
 }
 
+// ── 搜索（T5）──
+
+/**
+ * `pdf-reader.openSearch`——开启阅读区顶上的搜索条（幂等：本来就开着如实回 noop，⛔ 不当失败）。
+ *
+ * 只有「开」这一条命令：00.5 §七 接线表只声明了 `pdf-reader.openSearch`（搜索钮那行），
+ * 关条归搜索条自己的 ✕ / Esc——⛔ 不为对称另立 toggle（没有的入口不立命令）。
+ * ⚠️ 本命令**不代打查询串**：搜索是打字驱动的（`setSearchQuery` 边打边扫），
+ * 「搜什么」是人的输入，AI 要搜就先用键盘/UI 落串，再读 `pdf-reader.getStatus` 的
+ * `searchQuery` / `searchHits` / `searchCurrent`（读数与状态条同源一份）。
+ */
+export async function openSearch(...args: unknown[]): Promise<CmdReply> {
+  const hit = await address(args);
+  if (!hit.ok) return hit.reply;
+  const { store, sourceId } = hit;
+
+  const before = store.getStatus();
+  store.openSearch();
+  const after = store.getStatus();
+  if (before.searchOpen === after.searchOpen) {
+    return notDone("already-open", "搜索条本来就开着（关它走搜索条的 ✕ 或 Esc）", {
+      sourceId,
+      field: "searchOpen",
+      value: after.searchOpen,
+    });
+  }
+  return {
+    ok: true,
+    sourceId,
+    field: "searchOpen",
+    previous: before.searchOpen,
+    value: after.searchOpen,
+  };
+}
+
 // ── 读数 ──
 
 /**

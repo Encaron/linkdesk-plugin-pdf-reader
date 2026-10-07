@@ -1,14 +1,15 @@
 /**
  * 阅读器工具栏（40px，照 00.5 §一 ＋ 06-设计图 §B；图标钮 28×28、悬停 150ms、焦点环键盘可达）。
  *
- * 布局：侧栏开关 · 上一页 · 页码框（输入跳页）· 下一页 ｜ 缩小 · 百分比（点击回 100%）·
- * 放大 · 适宽 · 适页 ｜ 底色切换。搜索位 T5 到位（00.5 §七：搜索钮 T5 建钮——本格不建，无死代码）。
+ * 布局（00.5 §一 位次）：侧栏开关 · 上一页 · 页码框（输入跳页）· 下一页 ｜ 缩小 · 百分比
+ * （点击回 100%）· 放大 · 适宽 · 适页 ｜ 搜索 · 底色切换——搜索位 T5 到位（00.5 §七 表
+ * 「搜索钮 T5 建钮」，命令 `pdf-reader.openSearch`）。
  * 全部动作走 store 的同一份动作函数——T4 命令化时命令 handler 调的就是它们。
  */
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ContrastIcon, NextIcon, PrevIcon, SearchIcon, SidebarIcon, ZoomInIcon, ZoomOutIcon } from "../../components/icons";
 import { useReaderState, type ReaderStore } from "../readerStore";
-import { ContrastIcon, NextIcon, PrevIcon, SidebarIcon, ZoomInIcon, ZoomOutIcon } from "./icons";
 
 export function ReaderToolbar({ store }: { store: ReaderStore }) {
   const { t } = useTranslation();
@@ -84,6 +85,20 @@ export function ReaderToolbar({ store }: { store: ReaderStore }) {
       </button>
 
       <span className="pdf-reader-toolbar-sep" aria-hidden="true" />
+
+      {/* 搜索钮＝**开启**搜索条（不是开关）：命令 `pdf-reader.openSearch` 是纯开启动作，
+          关闭走搜索条自己的 ✕/Esc（00.5 §七 表只声明了这一条命令，⛔ 不另立 toggle）。
+          aria-pressed 如实反映搜索条是否在场——开着的条就在阅读区顶上，不用按钮再表态一次。 */}
+      <button
+        type="button"
+        className="pdf-reader-tbtn"
+        data-hint={t("搜索")}
+        aria-label={t("搜索")}
+        aria-pressed={s.search.open}
+        onClick={() => store.openSearch()}
+      >
+        <SearchIcon />
+      </button>
 
       <button
         type="button"

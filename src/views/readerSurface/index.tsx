@@ -7,12 +7,27 @@
  * - 缩放变化全窗重渲；换档瞬间按当前页锚定滚动位置（不跳页）。
  * - 视口尺寸经 store.reportViewport 回灌，适宽/适页模式据此重算（resize 跟随）。
  * - 换文档（doc 句柄更替）时渲染记录全清，防旧页残留。
+ *
+ * T5 文本层（划选复制＋搜索高亮）：
+ * - 文本层**同吃虚拟化窗口**（`hasCanvas` 那一份判据）：窗外不建 div，滚动/内存口径与 canvas 一致。
+ * - 文本层是 `position: absolute` 的浮层（卡片 `position: relative`），⛔ **不动卡片尺寸**——
+ *   缩放锚点、虚拟化偏移、canvas 尺寸全都不受影响（T3 回归判据）。
+ * - 跳转定位（把当前命中滚进视野中央）由本文件做：它是滚动容器的主人，别让各家自己动 scrollTop。
  */
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PAGE_GAP, WINDOW_BUFFER } from "../../constants";
+import type { PdfDocument } from "../../services/pdfDoc";
+import {
+  HIT_CURRENT_CLASS,
+  applyHighlights,
+  clearHighlights,
+  planHighlights,
+  renderTextLayer,
+  type RenderedTextLayer,
+} from "../../services/textLayer";
 import { pageAt, pageOffsets, visibleRange } from "../../utils/pagination";
-import { useReaderState, type ReaderStore } from "../readerStore";
+import { useReaderState, type ReaderStore, type SearchHit } from "../readerStore";
 
 /** 渲染被取消/中止的「预期收场」异常名——换文件、destroy、pdf.js 取消渲染时抛这些，不是故障 */
 const CANCELLED_RENDER_ERRORS = new Set(["AbortException", "RenderingCancelledException"]);
@@ -234,6 +249,45 @@ export function ReaderSurface({ store }: { store: ReaderStore }) {
     else canvasRefs.current.delete(page);
   }, []);
 
+  // ── 搜索命中：按页分组（只认 store 那一份命中表；`hits` 引用不变时分组结果不变 ⇒ 卡片 memo 有效）──
+  const hitsByPage = useMemo(() => {
+    const map = new Map<number, SearchHit[]>();
+    for (const hit of s.search.hits) {
+      const list = map.get(hit.page);
+      if (list) list.push(hit);
+      else map.set(hit.page, [hit]);
+    }
+    return map;
+  }, [s.search.hits]);
+  const noHits = useMemo<readonly SearchHit[]>(() => [], []);
+
+  /**
+   * 「当前命中已画进 DOM」的回执（文本层组件报上来）——把该条滚进视野中央。
+   *
+   * 为什么由阅读区统一做：它是滚动容器的主人。文本层自己调 scrollTop 会与
+   * 「gotoPage 滚到页顶」那一条抢（两条 effect 分属父子，落地顺序不保证），且滚动容器不该有第二个主人。
+   *
+   * 🔴 用 `setTimeout(0)` 而不是 rAF：它要落在**同一批 effect 跑完之后**（父的页顶滚动先落地），
+   * 而 rAF 在后台窗口会被冻结（T4 实机教训，见 scripts/dev 的 unthrottle）——定位读数就没了。
+   * 每次跳转只认一次（`jumpNonce` 去重）：之后用户自己滚开再滚回来，⛔ 不再抢滚动条。
+   */
+  const jumpHandledRef = useRef(-1);
+  const onCurrentHit = useCallback(
+    (el: HTMLElement) => {
+      const scroller = containerRef.current;
+      const nonce = store.getState().search.jumpNonce;
+      if (!scroller || jumpHandledRef.current === nonce) return;
+      jumpHandledRef.current = nonce;
+      setTimeout(() => {
+        if (!el.isConnected) return; // 期间滚走了/换页了：这条已经不在了
+        const box = el.getBoundingClientRect();
+        const view = scroller.getBoundingClientRect();
+        scroller.scrollTop += box.top - view.top - (scroller.clientHeight - box.height) / 2;
+      }, 0);
+    },
+    [store],
+  );
+
   if (!ready) {
     if (s.phase.kind === "loading") return <LoadingSkeleton text={t("加载中…")} />;
     return null; // error 态由 ReaderView 换 ErrorState，不落这里
@@ -249,7 +303,13 @@ export function ReaderSurface({ store }: { store: ReaderStore }) {
             width={widths[i]}
             height={h}
             hasCanvas={canvasPages.has(i + 1)}
+            doc={s.doc}
+            scale={s.scale}
+            hits={hitsByPage.get(i + 1) ?? noHits}
+            currentHit={s.search.currentMatch}
+            jumpNonce={s.search.jumpNonce}
             setCanvasRef={setCanvasRef}
+            onCurrentHit={onCurrentHit}
           />
         ))}
       </div>
@@ -262,19 +322,139 @@ const PageCard = memo(function PageCard({
   width,
   height,
   hasCanvas,
+  doc,
+  scale,
+  hits,
+  currentHit,
+  jumpNonce,
   setCanvasRef,
+  onCurrentHit,
 }: {
   page: number;
   width: number;
   height: number;
   hasCanvas: boolean;
+  doc: PdfDocument | null;
+  scale: number;
+  hits: readonly SearchHit[];
+  currentHit: number;
+  jumpNonce: number;
   setCanvasRef: (page: number, el: HTMLCanvasElement | null) => void;
+  onCurrentHit: (el: HTMLElement) => void;
 }) {
   return (
     <div className="pdf-reader-page-card" style={{ width, height }}>
       {hasCanvas && <canvas ref={(el) => setCanvasRef(page, el)} className="pdf-reader-page-canvas" />}
+      {hasCanvas && doc && (
+        <PageTextLayer
+          doc={doc}
+          page={page}
+          scale={scale}
+          hits={hits}
+          currentHit={currentHit}
+          jumpNonce={jumpNonce}
+          onCurrentHit={onCurrentHit}
+        />
+      )}
     </div>
   );
+});
+
+/**
+ * 一页的文本层——划选复制的载体，也是搜索命中的画布（T5）。
+ *
+ * 三条生命周期，各有它存在的理由：
+ * ① **建层**只在换文档/换页时跑。文本项不随缩放变——换档就重建会在 Ctrl+滚轮连档时反复拆装
+ *    上千个 span（T3 的缩放手感回归项就是这么坏的）。
+ * ② **换档**只把新 viewport 交给 pdf.js `update()`（改 `--scale-factor` ＋ 重算 `--scale-x`）。
+ * ③ **高亮**先复原全文再画（`clearHighlights` → `applyHighlights`）：改查询时新命中不一定覆盖旧命中
+ *    碰过的每一项，不先复原就会留下上一轮的高亮残影。
+ */
+const PageTextLayer = memo(function PageTextLayer({
+  doc,
+  page,
+  scale,
+  hits,
+  currentHit,
+  jumpNonce,
+  onCurrentHit,
+}: {
+  doc: PdfDocument;
+  page: number;
+  scale: number;
+  hits: readonly SearchHit[];
+  currentHit: number;
+  jumpNonce: number;
+  onCurrentHit: (el: HTMLElement) => void;
+}) {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const layerRef = useRef<RenderedTextLayer | null>(null);
+  const scaleRef = useRef(scale);
+  scaleRef.current = scale;
+  /** 建层计数——层换了一份（换文档）就 +1，高亮 effect 据此重跑 */
+  const [built, setBuilt] = useState(0);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+    let cancelled = false;
+    let made: RenderedTextLayer | null = null;
+    void (async () => {
+      try {
+        const layer = await renderTextLayer(doc, page, host, scaleRef.current);
+        if (cancelled) {
+          layer.destroy();
+          return;
+        }
+        made = layer;
+        layerRef.current = layer;
+        setBuilt((v) => v + 1);
+      } catch {
+        // 文本层建不起来（畸形文本项等）不该拖垮阅读：页面照常渲染，只是这页没有划选与高亮
+      }
+    })();
+    return () => {
+      cancelled = true;
+      layerRef.current = null;
+      made?.destroy();
+    };
+  }, [doc, page]);
+
+  useEffect(() => {
+    const layer = layerRef.current;
+    if (!layer) return;
+    let cancelled = false;
+    void (async () => {
+      const viewport = await doc.viewport(page, scale);
+      if (!cancelled && layerRef.current === layer) layer.setScale(viewport);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // 🔴 `built` 必须在依赖里：建层是异步的，本 effect 首次跑时层还没到手（早退）。
+    // 若期间档位变过一次（新文档就绪 → 适宽/适页重算，两拍常挨着），不再补这一下，
+    // 这页就会一直停在**建层那一刻的旧倍率**上（症状：文本层与 canvas 肉眼可辨的错位），
+    // 直到用户下次手动缩放才自愈。带 `built` 重跑一次即可（倍率没变时 pdf.js 的 update 是空操作）。
+  }, [doc, page, scale, built]);
+
+  useEffect(() => {
+    const layer = layerRef.current;
+    const host = hostRef.current;
+    if (!layer || !host || built === 0) return;
+    clearHighlights(layer.divs, layer.itemsStr);
+    if (hits.length === 0) return;
+    const ranges = planHighlights(
+      layer.itemsStr,
+      layer.starts,
+      hits.map((h) => ({ index: h.at, length: h.length, matchIdx: h.index })),
+    );
+    applyHighlights(layer.divs, layer.itemsStr, ranges, currentHit);
+    // 本页画出了「当前命中」⇒ 报给阅读区去居中（由它统一动 scrollTop，见 ReaderSurface 里那段）
+    const currentEl = host.querySelector<HTMLElement>(`.${HIT_CURRENT_CLASS}`);
+    if (currentEl) onCurrentHit(currentEl);
+  }, [built, hits, currentHit, jumpNonce, onCurrentHit]);
+
+  return <div ref={hostRef} className="pdf-reader-text-layer" />;
 });
 
 /**

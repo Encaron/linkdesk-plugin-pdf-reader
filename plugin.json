@@ -204,11 +204,25 @@
         ]
       },
       {
+        "id": "pdf-reader.openSearch",
+        "title": "搜索",
+        "category": "PDF 阅读器",
+        "when": "activeEditor == 'pdf-reader'",
+        "description": "展开阅读区顶上的搜索条（等于工具栏的放大镜钮）。幂等：本来就开着如实回 noop ＋ reason=already-open，⛔ 不当失败。只负责「开」——关条走搜索条自己的 ✕ 或 Esc（本仓不为对称另立 toggle 命令）。⚠️ 本命令不代打查询串：查询是打字驱动的（边打边扫），AI 要读搜索结果就调 pdf-reader.getStatus 看 searchQuery/searchHits/searchCurrent/searchScanning。回执 { ok, sourceId, field:\"searchOpen\", previous, value }。前提：已有一份打开的 PDF。",
+        "params": [
+          {
+            "name": "args",
+            "type": "object",
+            "description": "{ sourceId? }——点名要开哪一份阅读器的搜索条；缺省 = 当前活跃标签里的那一份"
+          }
+        ]
+      },
+      {
         "id": "pdf-reader.getStatus",
         "title": "读取阅读器状态",
         "category": "PDF 阅读器",
         "when": "activeEditor == 'pdf-reader'",
-        "description": "读当前阅读器的结构化状态——与状态条同源一份数据（当前页/总页数/倍率/缩放档/底色/侧栏开合）。回执 { ok, sourceId, hasDocument, currentPage, numPages, scale, zoomMode, bg, sidebarOpen, phase }。一份 PDF 都没打开时照样能读：回 ok:true ＋ hasDocument:false ＋ phase=\"none\"（空 ≠ 失败）；点名了却找不到才回 ok:false ＋ reason=bad-source（并列出有哪些）。",
+        "description": "读当前阅读器的结构化状态——与状态条同源一份数据（当前页/总页数/倍率/缩放档/底色/侧栏开合/搜索）。回执 { ok, sourceId, hasDocument, currentPage, numPages, scale, zoomMode, bg, sidebarOpen, searchOpen, searchQuery, searchHits, searchCurrent, searchScanning, searchScannedPages, phase }——searchCurrent 是 1-based 的「第几处」（0 = 没有当前命中），searchScanning 为真时 searchScannedPages 是已扫页数。一份 PDF 都没打开时照样能读：回 ok:true ＋ hasDocument:false ＋ phase=\"none\"（空 ≠ 失败）；点名了却找不到才回 ok:false ＋ reason=bad-source（并列出有哪些）。",
         "params": [
           {
             "name": "args",

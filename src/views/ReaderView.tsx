@@ -1,15 +1,17 @@
 /**
- * 阅读器装配根（00.5 §一：工具栏 40px ＋ 阅读区 ＋ 状态条 24px）。
+ * 阅读器装配根（00.5 §一：工具栏 40px ＋ 阅读区（壳，含搜索浮条）＋ 状态条 24px）。
  *
  * 根类 `pdf-reader` ＋ `data-pdf-bg="paper|night"` 换底色档（token 唯一定义在 styles/tokens.css，
  * 阅读区不跟壳主题——用户拍板的有意例外）；工具栏/状态条消费壳主题 token（跟主题）。
- * 键盘路径：方向键 PgUp/PgDn 翻页（非鼠标路径）。命令面 = T4 落成的 `pdf-reader.*` 十一条命令
- * （登记住 `src/commands/index.ts` 入口顶层，与视图在场与否无关——本视图不注册命令）。
+ * 键盘路径：方向键 PgUp/PgDn 翻页（非鼠标路径）；搜索条内 Enter/Shift+Enter 走位、Esc 收条。
+ * 命令面 = T4 落成的 `pdf-reader.*` 十一条 ＋ T5 的 `pdf-reader.openSearch`（登记住
+ * `src/commands/index.ts` 入口顶层，与视图在场与否无关——本视图不注册命令）。
  */
 import { useEffect, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
 import ErrorState from "../components/ErrorState";
+import SearchBar from "../components/SearchBar";
 import { CONFIG_DEFAULT_ZOOM } from "../constants";
 import { attachReaderStore, detachReaderStore } from "../services/readerBridge";
 import { DEFAULT_ZOOM_MODE, parseDefaultZoom } from "../utils/zoom";
@@ -67,7 +69,12 @@ export default function ReaderView({ filePath }: { filePath: string }) {
       ) : (
         <>
           <ReaderToolbar store={store} />
-          <ReaderSurface store={store} />
+          {/* 阅读区壳：搜索条是**浮在它之上**的绝对层（见 components/SearchBar.tsx 头注——
+              若把搜索条排进布局，开条会挤矮阅读区、连带适宽重算跳缩放） */}
+          <div className="pdf-reader-body">
+            <ReaderSurface store={store} />
+            <SearchBar store={store} />
+          </div>
           <div className="pdf-reader-status" role="status">
             <span>{t("第 {{page}} 页 / 共 {{total}} 页", { page: status.currentPage, total: status.numPages })}</span>
             <span>

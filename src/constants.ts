@@ -33,3 +33,19 @@ export const PLUGIN_ID = "pdf-reader";
 export const WHEN_PDF_ACTIVE = `activeEditor == '${PLUGIN_ID}'`;
 /** 配置键（`<pluginId>.<property>` 命名规则）——出厂缩放档，本插件唯一一条配置 */
 export const CONFIG_DEFAULT_ZOOM = `${PLUGIN_ID}.defaultZoom`;
+
+// ── 文本层与搜索（T5）──
+/**
+ * `getTextContent` 的取数口径——**搜索扫全文档与文本层渲染共用这一份**。
+ *
+ * 🔴 两处各取一份（哪怕选项只差一个）就是两套坐标：搜索算出的命中偏移落在 A 串上、
+ * 文本层排版用的是 B 串的 div，命中框与字形迟早对不上（见 `services/textLayer/search.ts` 头注）。
+ *
+ * `disableNormalization: true` = 照 pdf.js 自家查看器：文本层与查找**同用未归一化的原文**
+ * （`web/pdf_viewer.mjs` 两处调用点都是它）。叠字 `ﬁ` 一类不展开成 `fi`——这是 pdf.js 的既有
+ * 取舍（查/复制与字形一一对应），本仓照抄不另立标准。
+ */
+export const TEXT_CONTENT_OPTIONS = { disableNormalization: true } as const;
+
+/** 单页命中上限——病态文档（一页里几千个同一串）不该把高亮 span 铺满 DOM；超出即截断，读数如实报 */
+export const MAX_PAGE_MATCHES = 5000;

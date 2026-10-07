@@ -1,5 +1,5 @@
 /**
- * pdf-reader 命令注册——**登记表**就是下面那 11 行（id ↔ handler ↔ 标题一处摆齐，00.5 §七 的钮序）。
+ * pdf-reader 命令注册——**登记表**就是下面那 12 行（id ↔ handler ↔ 标题一处摆齐，00.5 §七 的钮序）。
  *
  * ── 什么时候注册：入口顶层（=`src/index.tsx` 求值那一刻），常驻、幂等 ──
  * 21-插件命令化规范 §7 之三第 1 条点名过这个坑：**能在外层注册就别拖到视图 mount**
@@ -26,6 +26,7 @@ import {
   fitWidth,
   getStatus,
   gotoPage,
+  openSearch,
   pageNext,
   pagePrev,
   setBackground,
@@ -47,7 +48,7 @@ function meta(title: string): { title: string; category: string; when: string } 
 }
 
 /**
- * 注册本仓全部命令（11 条，与 `plugin.json` 的 `contributes.commands[]` 逐条同形）。
+ * 注册本仓全部命令（12 条，与 `plugin.json` 的 `contributes.commands[]` 逐条同形）。
  * 幂等；无壳环境（单测 / 直开页面）静默跳过——命令面是壳给的能力，没有壳不是本插件的错，⛔ 不抛。
  */
 export function registerReaderCommands(): void {
@@ -68,6 +69,8 @@ export function registerReaderCommands(): void {
   // 底色与侧栏
   reg("pdf-reader.setBackground", setBackground, meta("设置阅读底色"));
   reg("pdf-reader.toggleSidebar", toggleSidebar, meta("切换缩略图侧栏"));
+  // 搜索（T5：开条归命令，关条归搜索条自己的 ✕/Esc——⛔ 不为对称另立 toggle）
+  reg("pdf-reader.openSearch", openSearch, meta("搜索"));
   // 读数（与状态条同源一份数据）
   reg("pdf-reader.getStatus", getStatus, meta("读取阅读器状态"));
 

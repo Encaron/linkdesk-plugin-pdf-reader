@@ -9,6 +9,7 @@
 import { useSyncExternalStore } from "react";
 import { PAGE_GAP, READING_PAD } from "../constants";
 import { loadPdf, PdfOpenError, type PdfDocument, type PageSize } from "../services/pdfDoc";
+import { findMatches, pageTextOf } from "../services/textLayer";
 import { clampScale, fitPageScale, fitWidthScale, zoomInScale, zoomOutScale } from "../utils/zoom";
 import type { ZoomMode } from "../utils/zoom";
 
@@ -22,6 +23,43 @@ export type ReaderPhase =
   | { kind: "ready" }
   | { kind: "error"; error: PdfOpenError };
 
+/** 一处搜索命中——`index` 是**文档顺序**里的全局序号（上下导航与「当前命中」都认它，⛔ 不用页内号） */
+export interface SearchHit {
+  /** 命中所在页（1-based） */
+  page: number;
+  index: number;
+  /** 在该页搜索文本里的起始偏移与长度（口径见 services/textLayer/search.ts 头注） */
+  at: number;
+  length: number;
+}
+
+/** 搜索态——一条链路的全部（搜索条、阅读区高亮、命令读数都从这一份出） */
+export interface SearchState {
+  open: boolean;
+  query: string;
+  /** 文档顺序的命中表；扫描中边扫边长（命中数直读靠它） */
+  hits: readonly SearchHit[];
+  /**
+   * 当前命中在 `hits` 里的下标（-1 = 无命中/未定位）。
+   * ⚠️ 名字**故意不叫 `current`**：JSX 里写 `s.search.current` 会被 `linkdesk/no-ref-current-in-jsx`
+   * 判成「ref.current 参与渲染」（那条规则只认属性名，分不出 store 状态与 ref）——⛔ 别改回去。
+   */
+  currentMatch: number;
+  scanning: boolean;
+  /** 已扫完的页数——扫描中给「扫到哪了」的读数（全文档搜索没有真进度可言，这是唯一的实话） */
+  scannedPages: number;
+  /**
+   * 「跳到某条命中」的序号——每次定位 +1。阅读区据此把该条滚进视野中央。
+   * 🔴 别拿 `current` 当触发：同一页内换到另一条时 `current` 会变而页不变，
+   * 但同页里**只有滚到该条**用户才看得见（长页尤其明显）。
+   */
+  jumpNonce: number;
+}
+
+function emptySearch(): SearchState {
+  return { open: false, query: "", hits: [], currentMatch: -1, scanning: false, scannedPages: 0, jumpNonce: 0 };
+}
+
 /** 状态条与 getStatus 同源共用的结构化读数（00.5 §七；T4 命令化时就是命令返回值） */
 export interface ReaderStatus {
   hasDocument: boolean;
@@ -31,6 +69,16 @@ export interface ReaderStatus {
   zoomMode: ZoomMode;
   bg: ReaderBg;
   sidebarOpen: boolean;
+  /** 搜索条是否展开 */
+  searchOpen: boolean;
+  searchQuery: string;
+  /** 全文档命中数（扫描中会继续长） */
+  searchHits: number;
+  /** 当前命中的**序号（1-based）**；0 = 没有（无命中／还没定位到） */
+  searchCurrent: number;
+  searchScanning: boolean;
+  /** 已扫完的页数（全文档搜索没有真进度，这是唯一的实话——扫描中给 AI 一个「在动」的凭据） */
+  searchScannedPages: number;
 }
 
 export interface ReaderState {
@@ -46,6 +94,7 @@ export interface ReaderState {
   zoomMode: ZoomMode;
   bg: ReaderBg;
   sidebarOpen: boolean;
+  search: SearchState;
   doc: PdfDocument | null;
   /** gotoPage 的滚动请求——readerSurface 消费后按 nonce 去重 */
   scrollTarget: { page: number; nonce: number } | null;
@@ -71,6 +120,7 @@ export class ReaderStore {
     zoomMode: "fitWidth",
     bg: "paper",
     sidebarOpen: false,
+    search: emptySearch(),
     doc: null,
     scrollTarget: null,
   };
@@ -91,6 +141,12 @@ export class ReaderStore {
     zoomMode: this.state.zoomMode,
     bg: this.state.bg,
     sidebarOpen: this.state.sidebarOpen,
+    searchOpen: this.state.search.open,
+    searchQuery: this.state.search.query,
+    searchHits: this.state.search.hits.length,
+    searchCurrent: this.state.search.currentMatch + 1, // 0 = 没有当前命中（1-based 与「第 3 处」同号）
+    searchScanning: this.state.search.scanning,
+    searchScannedPages: this.state.search.scannedPages,
   });
 
   private set(patch: Partial<ReaderState>): void {
@@ -110,6 +166,7 @@ export class ReaderStore {
       sizesVersion: this.state.sizesVersion + 1,
       currentPage: 1,
       scrollTarget: null,
+      search: { ...emptySearch(), open: this.state.search.open }, // 命中表随文档走：换文件即清（搜索条开合留着）
       doc: null,
     });
     try {
@@ -263,6 +320,94 @@ export class ReaderStore {
 
   toggleSidebar(): void {
     this.set({ sidebarOpen: !this.state.sidebarOpen });
+  }
+
+  // ── 搜索（T5）──
+  // 一条链路：SearchBar（查询串/上下导航）→ 本类扫全文档出命中表 → readerSurface 把命中画进文本层。
+  // ⛔ 命中表只有这一份：⛔ 别让视图自己再扫一遍（两套偏移 = 命中框与字形分叉，见 services/textLayer/search.ts）。
+
+  /** 扫描序号——改查询/关条/换文档都 +1，在途的旧扫描落地即弃（同 openSeq 的做法） */
+  private searchSeq = 0;
+
+  /** 打开搜索条（幂等；关条在搜索条自己的 ✕/Esc 上）——工具栏搜索钮与命令 openSearch 共用这一份 */
+  openSearch(): void {
+    if (this.state.search.open) return;
+    this.set({ search: { ...this.state.search, open: true } });
+  }
+
+  /** 关闭搜索条 = 连命中表一起清（⛔ 别把半份命中留在背后：下次开条还是旧高亮，看着像新结果） */
+  closeSearch(): void {
+    this.searchSeq++;
+    this.set({ search: { ...emptySearch(), jumpNonce: this.state.search.jumpNonce } });
+  }
+
+  /**
+   * 改查询串 → 起一次全文档扫描。
+   * 🔴 空串/纯空白 = 清命中表（不是「搜空白串」）；文档未就绪同理（如实给空表，不假装扫过）。
+   * 旧扫描一律靠 `searchSeq` 自行收手——⛔ 不 abort pdf.js 取数：页文本在 pdf.js 侧有缓存，
+   * 重扫同一页几乎零成本，而 abort 会把正在读的页一起连坐。
+   */
+  setSearchQuery(query: string): void {
+    const seq = ++this.searchSeq;
+    const doc = this.state.doc;
+    const needle = query.trim();
+    const idle = { ...this.state.search, query, hits: [], currentMatch: -1, scanning: false, scannedPages: 0 };
+    if (!doc || this.state.phase.kind !== "ready" || needle === "") {
+      this.set({ search: idle });
+      return;
+    }
+    this.set({ search: { ...idle, scanning: true } });
+    void this.scanAll(seq, doc, needle);
+  }
+
+  /** 逐页扫文本（页序 = 文档序，命中数边扫边长）；扫完定位并跳到该条所在页 */
+  private async scanAll(seq: number, doc: PdfDocument, needle: string): Promise<void> {
+    const hits: SearchHit[] = [];
+    const numPages = this.state.numPages;
+    for (let page = 1; page <= numPages; page++) {
+      if (seq !== this.searchSeq) return; // 被新查询/关条/换文档顶掉：当场收手
+      let text: string;
+      try {
+        text = pageTextOf(await doc.textContent(page)).text;
+      } catch {
+        continue; // 单页文本取不出来（畸形页）不该判死整场搜索——跳过它接着扫
+      }
+      if (seq !== this.searchSeq) return;
+      for (const m of findMatches(text, needle)) hits.push({ page, index: hits.length, at: m.index, length: m.length });
+      this.set({ search: { ...this.state.search, hits: hits.slice(), scannedPages: page } });
+    }
+    if (seq !== this.searchSeq) return;
+    // 落点从**当前页**起找第一条（读到这里的人多半在找眼前这一段）；当前页往后没有就回文档头一条
+    // （与上下导航同样是环形回绕，⛔ 不因为「眼前没命中」就停在无当前态）
+    let currentMatch = -1;
+    if (hits.length > 0) {
+      const from = hits.findIndex((h) => h.page >= this.state.currentPage);
+      currentMatch = from < 0 ? 0 : from;
+    }
+    this.set({
+      search: {
+        ...this.state.search,
+        hits,
+        currentMatch,
+        scanning: false,
+        scannedPages: numPages,
+        jumpNonce: currentMatch >= 0 ? this.state.search.jumpNonce + 1 : this.state.search.jumpNonce,
+      },
+    });
+    if (currentMatch >= 0) this.gotoPage(hits[currentMatch].page);
+  }
+
+  /**
+   * 上下走一处（Enter / Shift+Enter）——**环形回绕**（末尾的下一条是第一处，pdf.js 查找同款）。
+   * 返回是否真的动了（没命中时 false，调用方据此如实回话，⛔ 不假装跳了）。
+   */
+  searchStep(delta: 1 | -1): boolean {
+    const { hits, currentMatch } = this.state.search;
+    if (hits.length === 0) return false;
+    const next = currentMatch < 0 ? (delta > 0 ? 0 : hits.length - 1) : (currentMatch + delta + hits.length) % hits.length;
+    this.set({ search: { ...this.state.search, currentMatch: next, jumpNonce: this.state.search.jumpNonce + 1 } });
+    this.gotoPage(hits[next].page);
+    return true;
   }
 
   /** 渲染期非 abort 错误——文档会话视为失败，错误态接管 */

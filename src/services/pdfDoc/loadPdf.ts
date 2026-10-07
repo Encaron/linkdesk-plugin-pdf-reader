@@ -8,8 +8,18 @@
  * terminate，destroy() 里由本模块自己收），文档销毁 worker 即销毁，不留常驻线程。
  */
 import { getDocument, PDFWorker } from "pdfjs-dist";
-import type { PDFDocumentProxy } from "pdfjs-dist";
-import { PDFJS_CMAPS_URL, PDFJS_STANDARD_FONTS_URL, createPdfWorker } from "../../constants";
+import type { PDFDocumentProxy, PDFPageProxy, PageViewport } from "pdfjs-dist";
+import { PDFJS_CMAPS_URL, PDFJS_STANDARD_FONTS_URL, TEXT_CONTENT_OPTIONS, createPdfWorker } from "../../constants";
+
+/** pdf.js 的视口类型——只在本引擎域内流通（服务域出口给视图的是窄化数据） */
+export type { PageViewport };
+/**
+ * 一页的文本项集合（`getTextContent` 的返回）——**从 pdf.js 自己的方法签名派生**，
+ * ⛔ 不手抄形状：pdfjs-dist 的根类型入口（`types/src/pdf.d.ts`）**没有导出 `TextContent`**
+ * （只有 `PDFDocumentProxy` / `PageViewport` 那几个），手抄一份就等于自己维护一份会漂的镜像；
+ * 走 `ReturnType` 则它换形状时这里跟着走。
+ */
+export type TextContent = Awaited<ReturnType<PDFPageProxy["getTextContent"]>>;
 
 /** scale 1 下的页面尺寸（pt）——布局与缩放换算统一用它 */
 export interface PageSize {
@@ -41,6 +51,13 @@ export interface PdfDocument {
    * 位图与 style 尺寸都由本方法设置；返回该页 scale 1 尺寸（供布局校准）。
    */
   renderPage(pageNumber: number, canvas: HTMLCanvasElement, scale: number): Promise<PageSize>;
+  /**
+   * 该页的文本项（pdf.js `TextContent`）——搜索扫全文档与文本层渲染**共用这一份取数**
+   * （T5：两处各取一份 = 命中框迟早偏，见 `services/textLayer/search.ts` 头注）。
+   */
+  textContent(pageNumber: number): Promise<TextContent>;
+  /** 该页在 scale 下的视口——文本层按它排版（`--scale-factor` / UserUnit 都在这里面） */
+  viewport(pageNumber: number, scale: number): Promise<PageViewport>;
   /** 释放文档与 worker——幂等 */
   destroy(): Promise<void>;
 }
@@ -107,6 +124,14 @@ export async function loadPdf(filePath: string): Promise<PdfDocument> {
       if (!ctx) throw new Error("canvas 2d context unavailable");
       await page.render({ canvasContext: ctx, viewport }).promise;
       return { width: base.width, height: base.height };
+    },
+    async textContent(pageNumber) {
+      const page = await doc.getPage(pageNumber);
+      return page.getTextContent(TEXT_CONTENT_OPTIONS);
+    },
+    async viewport(pageNumber, scale) {
+      const page = await doc.getPage(pageNumber);
+      return page.getViewport({ scale });
     },
     async destroy() {
       if (destroyed) return;
