@@ -43,3 +43,22 @@ export function visibleRange(
   const last = pageAt(scrollTop + Math.max(0, viewHeight - 1), offsets, heights, gap);
   return { first, last: Math.max(first, last) };
 }
+
+/**
+ * 把可视区间朝两侧各放宽 `buffer` 页，并夹在 [1, numPages] 内——**渲染窗口**的唯一定义处。
+ *
+ * 阅读区（位图挂载）与缩略图条（位图挂载）此前各自内联了三份同样的 `Math.max/Math.min`，
+ * 而 `buffer` 的语义是「滚向哪边就先把哪边预渲染好」：**放宽方向必须是可视区间之外**，
+ * 误写成从窗口自身放宽会白渲染、且边界页（1 / numPages）容易越界——这里收成一处，
+ * 内联副本一律改调本函数（⛔ 不再各写一份）。
+ */
+export function windowRange(
+  win: { first: number; last: number },
+  numPages: number,
+  buffer: number,
+): { first: number; last: number } {
+  return {
+    first: Math.max(1, win.first - buffer),
+    last: Math.min(numPages, win.last + buffer),
+  };
+}

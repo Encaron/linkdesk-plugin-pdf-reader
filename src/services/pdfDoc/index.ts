@@ -16,3 +16,6 @@ export {
 
 /** 目录（T6）——纯树形转换住 outline.ts（异步 dest 解析在 loadPdf 里注入），读数计数这里出 */
 export { buildOutline, countOutline, type OutlineItem, type DestResolver, type RawOutlineNode } from "./outline";
+
+/** 目录目标（dest）→ 1-based 页码（T7 抽出）——三条 dest 分支的唯一判定处，同一域口出 */
+export { destResolver, resolveDestPage, type DestDocument } from "./dest";

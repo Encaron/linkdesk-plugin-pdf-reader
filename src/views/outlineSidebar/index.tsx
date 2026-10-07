@@ -21,9 +21,10 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronRightIcon } from "../../components/icons";
-import { THUMB_GAP, THUMB_IMAGE_WIDTH, THUMB_PAD, THUMB_WIDTH, WINDOW_BUFFER } from "../../constants";
+import { THUMB_GAP, THUMB_PAD, THUMB_WIDTH, WINDOW_BUFFER } from "../../constants";
 import type { OutlineItem } from "../../services/pdfDoc";
-import { pageOffsets, visibleRange } from "../../utils/pagination";
+import { pageOffsets, visibleRange, windowRange } from "../../utils/pagination";
+import { thumbRenderScale, thumbSlotHeight } from "../../utils/thumbs";
 import { useReaderState, type ReaderStore } from "../readerStore";
 
 export function OutlineSidebar({ store }: { store: ReaderStore }) {
@@ -46,10 +47,7 @@ export function OutlineSidebar({ store }: { store: ReaderStore }) {
     for (let i = 1; i <= s.numPages; i++) list.push(s.pageSizes.get(i) ?? s.defaultSize!);
     return list;
   }, [ready, s.numPages, s.defaultSize, s.pageSizes]);
-  const heights = useMemo(
-    () => sizes.map((sz) => Math.round((THUMB_IMAGE_WIDTH * sz.height) / sz.width)),
-    [sizes],
-  );
+  const heights = useMemo(() => sizes.map(thumbSlotHeight), [sizes]);
   const offsets = useMemo(() => pageOffsets(heights, THUMB_GAP), [heights]);
 
   // ── 滚动 → 可视条目窗口（rAF 节流，同阅读区）──
@@ -95,8 +93,7 @@ export function OutlineSidebar({ store }: { store: ReaderStore }) {
    * （见下面 `heights.map`），这里只管「哪几条是真位图」。
    */
   const windowed = useMemo(() => {
-    const first = Math.max(1, win.first - WINDOW_BUFFER);
-    const last = Math.min(s.numPages, win.last + WINDOW_BUFFER);
+    const { first, last } = windowRange(win, s.numPages, WINDOW_BUFFER);
     const list: number[] = [];
     for (let p = first; p <= last; p++) list.push(p);
     return list;
@@ -166,7 +163,7 @@ export function OutlineSidebar({ store }: { store: ReaderStore }) {
           const canvas = canvasRefs.current.get(p);
           const size = sizesRef.current[p - 1];
           if (!canvas || !size) continue;
-          const scale = THUMB_IMAGE_WIDTH / size.width;
+          const scale = thumbRenderScale(size);
           if (renderedScale.current.get(p) === scale) continue;
           try {
             await doc.renderPage(p, canvas, scale);

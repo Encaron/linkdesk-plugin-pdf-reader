@@ -51,8 +51,12 @@ export const TEXT_CONTENT_OPTIONS = { disableNormalization: true } as const;
 export const MAX_PAGE_MATCHES = 5000;
 
 // ── 缩略图侧栏与目录（T6，00.5 §一 左缘 180px 列 ＋ 06-设计图 §B `.r-side`）──
-/** 侧栏宽（px）——00.5 §一 定稿 180px（规格与 CSS 共用同一常量） */
-export const SIDEBAR_WIDTH = 180;
+/**
+ * 侧栏宽（px）——00.5 §一 定稿 180px。⚠️ **不导出**：仓里没有一处 import 它（读数是 T7 的
+ * 死代码普查逮到的孤儿导出），它只在本文件里派生 `THUMB_WIDTH`；CSS 那份（`.pdf-reader-side`
+ * 的 `width: 180px`）靠注释与本行对账，两边同数不同源。
+ */
+const SIDEBAR_WIDTH = 180;
 /**
  * 缩略图列内边距（px）——竖向用 THUMB_GAP，见下。
  * ⚠️ 06-设计图 `.r-side` 的写法是 `padding:10px`，这里取 **8px**：本仓有 4px 节奏门禁

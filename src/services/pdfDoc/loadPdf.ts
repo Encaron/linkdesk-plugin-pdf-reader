@@ -10,6 +10,7 @@
 import { getDocument, PDFWorker } from "pdfjs-dist";
 import type { PDFDocumentProxy, PDFPageProxy, PageViewport } from "pdfjs-dist";
 import { PDFJS_CMAPS_URL, PDFJS_STANDARD_FONTS_URL, TEXT_CONTENT_OPTIONS, createPdfWorker } from "../../constants";
+import { destResolver } from "./dest";
 import { buildOutline, type OutlineItem } from "./outline";
 
 /** pdf.js 的视口类型——只在本引擎域内流通（服务域出口给视图的是窄化数据） */
@@ -76,31 +77,6 @@ export interface PdfDocument {
  * 又是一次性 IPC（无 size / 无分块读）⇒ 本项目**没有任何真进度可报**。留个永不触发的回调
  * 只会喂出一条永远停在 0% 的进度条（死代码 ＋ 骗人），故整条进度面不设。
  */
-/**
- * 把一条目录 `dest` 解析成本仓的 1-based 页码；**解析不出给 0**（0 = 无目标，视图渲成不可点的行）。
- *
- * 走到这里时 `dest` 已经过 pdf.js 两道归一（`Catalog.parseDestDictionary` ＋ `fetchDest`）：
- * 具名目标（`/Dest /name`）已换成字符串、`<< /D … >>` 包裹形已拆开、非法显式目标已滤成 `null`
- * ⇒ 本函数只需认两支（⛔ 不再自查字典形，那是到不了这儿的死分支）：
- *   · **字符串**——具名目标，经 `getDestination` 换开（换出来是数组，或 `null`）；
- *   · **数组**——显式目标，首位两种写法都要认：**页对象引用**（`[3 0 R /Fit]`，主流，走
- *     `getPageIndex`）或 **0-based 页序数**（`[2 /Fit]`，老生成器写法，pdf.js 的 `isValidExplicitDest`
- *     同样认它，直接加一）——⛔ 只认引用式 = 真文档里会静默少一批能跳的条目。
- * 坏目标、指向已删对象、外链条目（只有 url 没有 dest）一律落到 0，⛔ 不判死整棵树。
- */
-async function pageOfDest(doc: PDFDocumentProxy, dest: unknown): Promise<number> {
-  try {
-    const explicit: unknown = typeof dest === "string" ? await doc.getDestination(dest) : dest;
-    if (!Array.isArray(explicit) || explicit.length === 0) return 0;
-    const first = explicit[0];
-    if (typeof first === "number") return Math.floor(first) + 1;
-    if (first === null || typeof first !== "object") return 0;
-    return (await doc.getPageIndex(first)) + 1;
-  } catch {
-    return 0;
-  }
-}
-
 export async function loadPdf(filePath: string): Promise<PdfDocument> {
   let data: unknown;
   try {
@@ -166,7 +142,8 @@ export async function loadPdf(filePath: string): Promise<PdfDocument> {
     },
     async outline() {
       const raw = await doc.getOutline();
-      return buildOutline(raw, (dest) => pageOfDest(doc, dest));
+      // dest → 页码的换算住 dest.ts（T7 抽出的纯逻辑，三条 dest 分支在单测里逐条钉住）
+      return buildOutline(raw, destResolver(doc));
     },
     async destroy() {
       if (destroyed) return;

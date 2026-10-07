@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@linkdesk/ui";
 import { SHELL_COMMANDS, openWith } from "@linkdesk/plugin-sdk/shell-commands";
 import type { PdfOpenError } from "../services/pdfDoc";
+import { ERROR_NAME_VAR, errorCopy } from "./errorCopy";
 
 const lk = () => window.linkdesk;
 
@@ -23,17 +24,13 @@ export default function ErrorState({ filePath, error }: { filePath: string; erro
   const [canOpenWith, setCanOpenWith] = useState(false);
 
   const fileName = useMemo(() => filePath.split(/[\\/]/).pop() || filePath, [filePath]);
-  const encrypted = error.kind === "encrypted";
-  // 标题仍是原两式（损坏态／加密态）；但**说明句照 kind 说实话**——
-  // 「读不到文件」与「文件是坏的」给用户的下一个动作相反（去查占用/路径 vs 去别处找副本），
-  // ⛔ 别把读取失败也说成「损坏」（实机把渲染期异常也归到这里，会误导排查方向）。
-  const desc =
-    error.kind === "encrypted"
-      ? t("暂不支持打开受密码保护的文件。")
-      : error.kind === "invalid"
-        ? t("「{{name}}」损坏或不是有效的 PDF 格式。", { name: fileName })
-        : t("读不到「{{name}}」——文件可能已被移走，或被别的程序占用。", { name: fileName });
-  const showDetail = error.kind === "read" || error.kind === "unknown";
+  /**
+   * 选键（标题／说明／是否补原文／图标）归 `errorCopy.ts` 一张表——⛔ 不在 JSX 里判 kind。
+   * 🔴 「读不到文件」与「文件是坏的」给用户的下一个动作相反（去查占用·路径 vs 去别处找副本），
+   * 表里刻意分成两档说明句，别为了少一句文案把它们合并（实机把渲染期异常也说成「损坏」会带偏排查）。
+   */
+  const copy = errorCopy(error.kind);
+  const desc = copy.descUsesName ? t(copy.descKey, { [ERROR_NAME_VAR]: fileName }) : t(copy.descKey);
 
   // 探面：市场插件在不在（旧壳或插件缺席 ⇒ 按钮隐藏）
   useEffect(() => {
@@ -82,7 +79,7 @@ export default function ErrorState({ filePath, error }: { filePath: string; erro
 
   return (
     <div className="pdf-reader-error">
-      {encrypted ? (
+      {copy.icon === "lock" ? (
         <svg className="pdf-reader-error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
           <rect x="5" y="11" width="14" height="9" rx="2" />
           <path d="M8 11V8a4 4 0 0 1 8 0v3" />
@@ -93,9 +90,9 @@ export default function ErrorState({ filePath, error }: { filePath: string; erro
           <path d="M12 11v4M12 18.5v.5" />
         </svg>
       )}
-      <div className="pdf-reader-error-title">{encrypted ? t("此 PDF 已加密") : t("此 PDF 无法打开")}</div>
+      <div className="pdf-reader-error-title">{t(copy.titleKey)}</div>
       <div className="pdf-reader-error-desc">{desc}</div>
-      {showDetail && error.message && <div className="pdf-reader-error-detail">{error.message}</div>}
+      {copy.showDetail && error.message && <div className="pdf-reader-error-detail">{error.message}</div>}
       <div className="pdf-reader-error-actions">
         {canOpenWith && (
           <Button variant="ghost" onClick={handleOpenWith}>

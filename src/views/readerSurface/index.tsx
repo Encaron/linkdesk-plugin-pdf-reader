@@ -26,7 +26,7 @@ import {
   renderTextLayer,
   type RenderedTextLayer,
 } from "../../services/textLayer";
-import { pageAt, pageOffsets, visibleRange } from "../../utils/pagination";
+import { pageAt, pageOffsets, visibleRange, windowRange } from "../../utils/pagination";
 import { useReaderState, type ReaderStore, type SearchHit } from "../readerStore";
 
 /** 渲染被取消/中止的「预期收场」异常名——换文件、destroy、pdf.js 取消渲染时抛这些，不是故障 */
@@ -117,8 +117,7 @@ export function ReaderSurface({ store }: { store: ReaderStore }) {
   const [canvasPages, setCanvasPages] = useState<ReadonlySet<number>>(new Set());
   useEffect(() => {
     if (!ready) return;
-    const first = Math.max(1, win.first - WINDOW_BUFFER);
-    const last = Math.min(s.numPages, win.last + WINDOW_BUFFER);
+    const { first, last } = windowRange(win, s.numPages, WINDOW_BUFFER);
     let removed: Set<number> | null = null;
     for (const p of canvasPages) {
       if (p < first || p > last) {
@@ -170,8 +169,7 @@ export function ReaderSurface({ store }: { store: ReaderStore }) {
         const doc = store.getState().doc;
         if (!doc) break; // 已 dispose/换文件
         const scale = store.getState().scale;
-        const first = Math.max(1, winRef.current.first - WINDOW_BUFFER);
-        const last = Math.min(numPagesRef.current, winRef.current.last + WINDOW_BUFFER);
+        const { first, last } = windowRange(winRef.current, numPagesRef.current, WINDOW_BUFFER);
         for (let p = first; p <= last; p++) {
           if (renderReqRef.current) break; // 期间又滚动/换档：让位重算窗口与档位
           if (docRef.current !== doc || store.getState().scale !== scale) break;
