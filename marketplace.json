@@ -1,23 +1,29 @@
 {
   "version": "1",
-  "updatedAt": "2026-10-07T16:46:13.124Z",
+  "updatedAt": "2026-10-07T17:38:17.416Z",
   "plugins": [
     {
       "id": "pdf-reader",
       "name": "PDF 阅读器",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "description": "单击 pdf 开真阅读器——渲染、翻页、缩放、搜索；卸载即退回。",
       "author": {
         "name": "Encaron"
       },
-      "icon": "https://raw.githubusercontent.com/Encaron/linkdesk-plugin-pdf-reader/v0.1.0/resources/icon.svg",
+      "icon": "https://raw.githubusercontent.com/Encaron/linkdesk-plugin-pdf-reader/v0.1.1/resources/icon.svg",
       "iconSource": "url",
       "minAppVersion": "0.2.32",
-      "readmeUrl": "https://raw.githubusercontent.com/Encaron/linkdesk-plugin-pdf-reader/v0.1.0/README.md",
-      "downloadUrl": "https://github.com/Encaron/linkdesk-plugin-pdf-reader/releases/download/v0.1.0/pdf-reader.linkdesk-plugin",
-      "size": 2159505,
-      "publishedAt": "2026-10-07T16:46:13.124Z",
+      "readmeUrl": "https://raw.githubusercontent.com/Encaron/linkdesk-plugin-pdf-reader/v0.1.1/README.md",
+      "downloadUrl": "https://github.com/Encaron/linkdesk-plugin-pdf-reader/releases/download/v0.1.1/pdf-reader.linkdesk-plugin",
+      "size": 2160083,
+      "publishedAt": "2026-10-07T17:38:17.416Z",
       "versions": [
+        {
+          "version": "0.1.1",
+          "downloadUrl": "https://github.com/Encaron/linkdesk-plugin-pdf-reader/releases/download/v0.1.1/pdf-reader.linkdesk-plugin",
+          "publishedAt": "2026-10-07T17:38:17.416Z",
+          "changelog": "错误页的两颗钮不再跟壳主题取色——本插件底色只有纸白/夜间两档，跟着主题会撞上「钮和钮里的字一起看不清」。\n\n**修了什么**\n\n- 「此 PDF 无法打开」「此 PDF 已加密」两页里的「打开方式…」「在市场搜索阅读器」，原先直接吃壳共享钮的颜色（字／描边／悬停底全来自壳主题变量）。深色主题 ＋ 夜间阅读底这类组合下，字色对底只剩 **2.52:1**、强调色只剩 **1.9:1**。\n- 现在两颗钮的颜色一律取自本插件自有色族：字 `--pdf-ink-ui`、底 `--pdf-bg-page`、描边 `--pdf-border-page`、悬停描边 `--pdf-accent`——对底对比度纸白 **13.82:1**、夜间 **14.48:1**。\n- **圆角仍随壳主题**（`--radius-sm`），内边距与字号也照旧随共享件：尺寸口径不分叉。\n\n**没变的**\n\n- 功能与命令零变更（12 条命令、声明面、配置项一字未动）；两颗钮的出现条件仍是探测接线——动作面不在就隐藏，不留死钮。"
+        },
         {
           "version": "0.1.0",
           "downloadUrl": "https://github.com/Encaron/linkdesk-plugin-pdf-reader/releases/download/v0.1.0/pdf-reader.linkdesk-plugin",
