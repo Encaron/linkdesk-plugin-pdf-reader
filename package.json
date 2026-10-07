@@ -5,11 +5,13 @@
   "description": "Pdf Reader——LinkDesk 插件（由 create-linkdesk-plugin 生成）",
   "type": "module",
   "dependencies": {
-    "@linkdesk/ui": "0.2.56"
+    "@linkdesk/ui": "0.2.56",
+    "pdfjs-dist": "6.4.299"
   },
   "scripts": {
     "dev": "linkdesk-plugin-sdk dev",
     "dev:real": "linkdesk-plugin-sdk dev --real",
+    "prebuild": "node scripts/sync-pdfjs-assets.mjs",
     "build": "linkdesk-plugin-sdk build",
     "publish": "linkdesk-plugin-sdk publish",
     "validate": "linkdesk-plugin-sdk validate",

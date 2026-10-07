@@ -4,5 +4,8 @@ node_modules/
 # 构建中间产物（可随时 npm run build 重建）
 dist/
 
+# pdf.js 静态资产副本（scripts/sync-pdfjs-assets.mjs 随 prebuild 从 node_modules 同步，产物不是源码）
+public/
+
 # 分发包——由 GitHub Release 承载，不进你的源码仓
 *.linkdesk-plugin

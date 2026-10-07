@@ -1,5 +1,8 @@
 {
   "PDF 阅读器": "PDF Reader",
   "从文件树打开一个 pdf 文件。": "Open a PDF file from the file tree.",
-  "单击 pdf 开真阅读器——渲染、翻页、缩放、搜索；卸载即退回。": "Click a PDF to open a real reader — render, page through, zoom, search; uninstall to revert."
+  "单击 pdf 开真阅读器——渲染、翻页、缩放、搜索；卸载即退回。": "Click a PDF to open a real reader — render, page through, zoom, search; uninstall to revert.",
+  "加载中…": "Loading…",
+  "第 1 页 · 共 {{total}} 页": "Page 1 of {{total}}",
+  "加载失败：{{message}}": "Failed to load: {{message}}"
 }

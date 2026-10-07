@@ -1,4 +1,4 @@
-/* PDF 阅读器插件样式（T1 骨架；阅读区配色族由 T3 照 00.5 §二 token 表落）。
+/* PDF 阅读器插件样式（T2 引擎装配；阅读区配色族由 T3 照 00.5 §二 token 表落）。
    四条纪律：颜色一律 var(--xxx) 禁硬编码 hex · 字号走 var(--font-size-*) ·
    间距 4px 节奏 · 类名一律 pdf-reader- 前缀（一张样式表全局共享，裸类名会撞别人）。 */
 
@@ -7,14 +7,20 @@
   font-family: inherit;
 }
 
-.pdf-reader-shell__title {
-  margin: 0 0 8px;
-  color: var(--text-primary);
-}
-
-.pdf-reader-shell__path,
 .pdf-reader-shell__hint {
   margin: 0;
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.pdf-reader-canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.pdf-reader-meta {
+  margin: 8px 0 0;
   color: var(--text-muted);
   font-size: var(--font-size-xs);
 }
