@@ -1,5 +1,5 @@
 /**
- * 阅读器装配根（00.5 §一：工具栏 40px ＋ 阅读区（壳，含搜索浮条）＋ 状态条 24px）。
+ * 阅读器装配根（00.5 §一：工具栏 40px ＋ 阅读区（壳，含搜索浮条/缩略图侧栏）＋ 状态条 24px）。
  *
  * 根类 `pdf-reader` ＋ `data-pdf-bg="paper|night"` 换底色档（token 唯一定义在 styles/tokens.css，
  * 阅读区不跟壳主题——用户拍板的有意例外）；工具栏/状态条消费壳主题 token（跟主题）。
@@ -16,6 +16,7 @@ import { CONFIG_DEFAULT_ZOOM } from "../constants";
 import { attachReaderStore, detachReaderStore } from "../services/readerBridge";
 import { DEFAULT_ZOOM_MODE, parseDefaultZoom } from "../utils/zoom";
 import { useReaderState, createReaderStore } from "./readerStore";
+import { OutlineSidebar } from "./outlineSidebar";
 import { ReaderToolbar } from "./readerToolbar";
 import { ReaderSurface } from "./readerSurface";
 
@@ -70,8 +71,11 @@ export default function ReaderView({ filePath }: { filePath: string }) {
         <>
           <ReaderToolbar store={store} />
           {/* 阅读区壳：搜索条是**浮在它之上**的绝对层（见 components/SearchBar.tsx 头注——
-              若把搜索条排进布局，开条会挤矮阅读区、连带适宽重算跳缩放） */}
+              若把搜索条排进布局，开条会挤矮阅读区、连带适宽重算跳缩放）。
+              缩略图侧栏（T6）相反：它是 00.5 §一 里的**真列**（180px，排进这一行），
+              开着它阅读区就窄了、适宽据此重算倍率——那是有意的（侧栏挡住的宽度不该算进适宽）。 */}
           <div className="pdf-reader-body">
+            {s.sidebarOpen && <OutlineSidebar store={store} />}
             <ReaderSurface store={store} />
             <SearchBar store={store} />
           </div>

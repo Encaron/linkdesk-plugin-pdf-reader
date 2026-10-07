@@ -8,7 +8,7 @@
  */
 import { useSyncExternalStore } from "react";
 import { PAGE_GAP, READING_PAD } from "../constants";
-import { loadPdf, PdfOpenError, type PdfDocument, type PageSize } from "../services/pdfDoc";
+import { countOutline, loadPdf, PdfOpenError, type OutlineItem, type PdfDocument, type PageSize } from "../services/pdfDoc";
 import { findMatches, pageTextOf } from "../services/textLayer";
 import { clampScale, fitPageScale, fitWidthScale, zoomInScale, zoomOutScale } from "../utils/zoom";
 import type { ZoomMode } from "../utils/zoom";
@@ -69,6 +69,8 @@ export interface ReaderStatus {
   zoomMode: ZoomMode;
   bg: ReaderBg;
   sidebarOpen: boolean;
+  /** 目录条目总数（含各级子项）——0 = 这份文档没有目录（或目录读不出来，两种都不当失败） */
+  outlineCount: number;
   /** 搜索条是否展开 */
   searchOpen: boolean;
   searchQuery: string;
@@ -94,6 +96,8 @@ export interface ReaderState {
   zoomMode: ZoomMode;
   bg: ReaderBg;
   sidebarOpen: boolean;
+  /** 文档目录（书签树）——随文档走，空数组 = 没有目录（T6） */
+  outline: readonly OutlineItem[];
   search: SearchState;
   doc: PdfDocument | null;
   /** gotoPage 的滚动请求——readerSurface 消费后按 nonce 去重 */
@@ -120,6 +124,7 @@ export class ReaderStore {
     zoomMode: "fitWidth",
     bg: "paper",
     sidebarOpen: false,
+    outline: [],
     search: emptySearch(),
     doc: null,
     scrollTarget: null,
@@ -141,6 +146,7 @@ export class ReaderStore {
     zoomMode: this.state.zoomMode,
     bg: this.state.bg,
     sidebarOpen: this.state.sidebarOpen,
+    outlineCount: countOutline(this.state.outline),
     searchOpen: this.state.search.open,
     searchQuery: this.state.search.query,
     searchHits: this.state.search.hits.length,
@@ -167,6 +173,7 @@ export class ReaderStore {
       currentPage: 1,
       scrollTarget: null,
       search: { ...emptySearch(), open: this.state.search.open }, // 命中表随文档走：换文件即清（搜索条开合留着）
+      outline: [], // 目录随文档走：换文件即清（旧文档的书签留着会指到新文档的页上）
       doc: null,
     });
     try {
@@ -194,11 +201,27 @@ export class ReaderStore {
         sizesVersion: this.state.sizesVersion + 1,
       });
       this.recomputeFit();
+      void this.loadOutline(seq, doc);
     } catch (err) {
       if (seq !== this.openSeq) return;
       const error = err instanceof PdfOpenError ? err : new PdfOpenError("unknown", String(err));
       this.set({ phase: { kind: "error", error } });
     }
+  }
+
+  /**
+   * 读目录（T6）——**在 ready 之后异步补**，⛔ 不挡阅读：目录读不出（畸形/无目录）就当没有，
+   * 阅读器照常（书签是附加物，不是打开文档的必要条件）。落地前查 openSeq：换文件后旧目录作废。
+   */
+  private async loadOutline(seq: number, doc: PdfDocument): Promise<void> {
+    let items: OutlineItem[] = [];
+    try {
+      items = await doc.outline();
+    } catch {
+      items = []; // 读不出来 ≠ 打开失败：如实给「没有目录」
+    }
+    if (seq !== this.openSeq) return;
+    this.set({ outline: items });
   }
 
   /** 视图卸载（关标签）时释放文档与 worker。 */

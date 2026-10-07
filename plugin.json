@@ -222,7 +222,7 @@
         "title": "读取阅读器状态",
         "category": "PDF 阅读器",
         "when": "activeEditor == 'pdf-reader'",
-        "description": "读当前阅读器的结构化状态——与状态条同源一份数据（当前页/总页数/倍率/缩放档/底色/侧栏开合/搜索）。回执 { ok, sourceId, hasDocument, currentPage, numPages, scale, zoomMode, bg, sidebarOpen, searchOpen, searchQuery, searchHits, searchCurrent, searchScanning, searchScannedPages, phase }——searchCurrent 是 1-based 的「第几处」（0 = 没有当前命中），searchScanning 为真时 searchScannedPages 是已扫页数。一份 PDF 都没打开时照样能读：回 ok:true ＋ hasDocument:false ＋ phase=\"none\"（空 ≠ 失败）；点名了却找不到才回 ok:false ＋ reason=bad-source（并列出有哪些）。",
+        "description": "读当前阅读器的结构化状态——与状态条同源一份数据（当前页/总页数/倍率/缩放档/底色/侧栏开合与目录/搜索）。回执 { ok, sourceId, hasDocument, currentPage, numPages, scale, zoomMode, bg, sidebarOpen, outlineCount, searchOpen, searchQuery, searchHits, searchCurrent, searchScanning, searchScannedPages, phase }——searchCurrent 是 1-based 的「第几处」（0 = 没有当前命中），searchScanning 为真时 searchScannedPages 是已扫页数；outlineCount 是目录条目总数（含各级子项；0 = 这份文档没有目录，⛔ 不是失败）。一份 PDF 都没打开时照样能读：回 ok:true ＋ hasDocument:false ＋ phase=\"none\"（空 ≠ 失败）；点名了却找不到才回 ok:false ＋ reason=bad-source（并列出有哪些）。",
         "params": [
           {
             "name": "args",

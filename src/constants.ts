@@ -49,3 +49,23 @@ export const TEXT_CONTENT_OPTIONS = { disableNormalization: true } as const;
 
 /** 单页命中上限——病态文档（一页里几千个同一串）不该把高亮 span 铺满 DOM；超出即截断，读数如实报 */
 export const MAX_PAGE_MATCHES = 5000;
+
+// ── 缩略图侧栏与目录（T6，00.5 §一 左缘 180px 列 ＋ 06-设计图 §B `.r-side`）──
+/** 侧栏宽（px）——00.5 §一 定稿 180px（规格与 CSS 共用同一常量） */
+export const SIDEBAR_WIDTH = 180;
+/**
+ * 缩略图列内边距（px）——竖向用 THUMB_GAP，见下。
+ * ⚠️ 06-设计图 `.r-side` 的写法是 `padding:10px`，这里取 **8px**：本仓有 4px 节奏门禁
+ * （`check-spacing-grid`），10px 不在刻度上；设计图那一版是示意、00.5 只定了 180px 列宽。
+ */
+export const THUMB_PAD = 8;
+/**
+ * 缩略图条目间距（px，06-设计图 gap=8）。
+ * 🔴 它同时是 `pageOffsets()` 的 gap **和**列容器 padding-top ⇒ 纯函数算出的偏移与屏幕上的
+ * 位置逐像素对齐（T3 的阅读区同款口径：`.pdf-reader-pages` 的 padding 恰等于 PAGE_GAP）。
+ */
+export const THUMB_GAP = 8;
+/** 缩略图槽位宽（px，含两侧各 1px 描边）——列宽扣掉内边距 */
+export const THUMB_WIDTH = SIDEBAR_WIDTH - THUMB_PAD * 2;
+/** 缩略图**位图**宽（px）= 槽位宽 − 两侧描边——`renderPage` 的倍率由它反推（位图宽 / 页宽） */
+export const THUMB_IMAGE_WIDTH = THUMB_WIDTH - 2;

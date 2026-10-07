@@ -115,3 +115,12 @@ export function ArrowDownIcon({ size }: IconProps) {
     </svg>
   );
 }
+
+/** 目录树的展开箭头（收起时指右，展开时由 CSS 转 90°——⛔ 不为两个态各画一份 path） */
+export function ChevronRightIcon({ size }: IconProps) {
+  return (
+    <svg {...base(size)}>
+      <path d="M9 6l6 6-6 6" />
+    </svg>
+  );
+}

@@ -1,5 +1,6 @@
 /*
- * PDF 阅读器组件样式（T3 M1 主体，照 00.5 §一/§三 ＋ 06-设计图 §B/§C；T5 补文本层/命中/搜索条）。
+ * PDF 阅读器组件样式（T3 M1 主体，照 00.5 §一/§三 ＋ 06-设计图 §B/§C；T5 补文本层/命中/搜索条；
+ * T6 补缩略图侧栏/目录树）。
  * 纪律：阅读区色值唯一出处 = tokens.css，这里只引 var(--pdf-*)；工具栏/状态条/搜索条消费壳主题
  * token（跟主题——切壳主题阅读区纹丝不动，验收句）；字号 var(--font-size-*)；
  * 类名一律 pdf-reader- 前缀、状态类复合、@keyframes 带前缀（一张样式表全局共享）。
@@ -468,4 +469,162 @@
 .pdf-reader-search-btn:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
+}
+
+/* ── 缩略图侧栏＋目录树（T6；00.5 §一 左缘 180px 真列 ＋ 06-设计图 §B `.r-side`）── */
+/* 侧栏是布局里的真列（⛔ 不是浮层）：阅读区因此变窄、适宽重算——见 ReaderView 那段注释 */
+.pdf-reader-side {
+  flex: none;
+  width: 180px; /* SIDEBAR_WIDTH——与 src/constants.ts 同一常量 */
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--pdf-bg-surface);
+  border-right: 1px solid var(--pdf-border-page);
+}
+
+/* 目录段：有目录才长出来（⛔ 不给空目录画空标题栏）；最高 40%——再长的书签树也在自己里面滚 */
+.pdf-reader-outline {
+  flex: none;
+  max-height: 40%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--pdf-border-page);
+}
+.pdf-reader-outline-head {
+  flex: none;
+  padding: 6px 8px;
+  font-size: var(--font-size-xs);
+  color: var(--pdf-ink-muted);
+}
+.pdf-reader-outline-list {
+  overflow: auto;
+  padding: 0 6px 6px;
+}
+.pdf-reader-outline-group {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pdf-reader-outline-item {
+  margin: 0;
+}
+.pdf-reader-outline-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+.pdf-reader-outline-toggle {
+  width: 16px;
+  height: 18px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  color: var(--pdf-ink-muted);
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.pdf-reader-outline-toggle svg {
+  transition: transform 150ms ease;
+}
+/* 展开/收起共用一个箭头：收起指右、展开转 90°（⛔ 不为两个态各画一份 path） */
+.pdf-reader-outline-toggle[data-pdf-open="true"] svg {
+  transform: rotate(90deg);
+}
+.pdf-reader-outline-toggle:hover {
+  background: var(--hover-overlay);
+  color: var(--pdf-ink-ui);
+}
+.pdf-reader-outline-toggle:focus-visible {
+  outline: 2px solid var(--pdf-accent);
+  outline-offset: 1px;
+}
+/* 叶子行的占位：与展开钮同宽，标题才能逐级对齐 */
+.pdf-reader-outline-dot {
+  width: 16px;
+  height: 18px;
+  flex: none;
+}
+
+.pdf-reader-outline-label {
+  flex: 1;
+  min-width: 0;
+  padding: 2px 4px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  text-align: left;
+  font-size: var(--font-size-xs);
+  color: var(--pdf-ink-ui);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* 可跳的条目（真按钮）与跳不了的（外链/坏目标——只显示不给钮）各挂一个态类 */
+.pdf-reader-outline-jump {
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+.pdf-reader-outline-jump:hover {
+  background: var(--hover-overlay);
+}
+.pdf-reader-outline-jump:focus-visible {
+  outline: 2px solid var(--pdf-accent);
+  outline-offset: 1px;
+}
+.pdf-reader-outline-static {
+  color: var(--pdf-ink-muted);
+}
+
+/* 缩略图列：竖向 padding 恰等于 THUMB_GAP ⇒ 纯函数 pageOffsets 算出的偏移与屏幕逐像素对齐 */
+.pdf-reader-thumbs {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px; /* THUMB_GAP */
+  padding: 8px; /* 竖向 = THUMB_GAP、横向 = THUMB_PAD */
+}
+.pdf-reader-thumb {
+  flex: none;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--pdf-border-page);
+  border-radius: 4px;
+  background: var(--pdf-bg-page);
+  box-shadow: var(--shadow-hairline);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 150ms ease;
+}
+.pdf-reader-thumb:hover {
+  border-color: var(--pdf-accent);
+}
+/* 当前页描边（00.5 §七；06-设计图 `.thumb.cur` 同款）——色值取自 token，⛔ 无新增色值 */
+.pdf-reader-thumb-current {
+  outline: 2px solid var(--pdf-accent);
+  outline-offset: 1px;
+}
+.pdf-reader-thumb:focus-visible {
+  outline: 2px solid var(--pdf-accent);
+  outline-offset: 1px;
+}
+.pdf-reader-thumb-canvas {
+  display: block;
+}
+/* 夜间档缩略图同样反亮度（与正文页卡同款口径——缩略图就是那张纸的小样） */
+.pdf-reader-root[data-pdf-bg="night"] .pdf-reader-thumb-canvas {
+  filter: invert(1) hue-rotate(180deg);
 }
