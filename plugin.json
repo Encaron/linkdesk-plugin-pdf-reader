@@ -6,7 +6,7 @@
   // ── 插件身份（发布后永不可变）──
   "pluginId": "pdf-reader",
   "name": "PDF 阅读器",
-  "version": "0.1.0",
+  "version": "0.1.1",
   // 0.2.32 = 本插件声明面（fileAssociations 路由）的壳版本下限；
   // 引 @linkdesk/ui 后由 `npm run lint` 按实际导入重算地板。
   "minAppVersion": "0.2.32",

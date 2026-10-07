@@ -267,6 +267,30 @@
   gap: 8px;
   margin-top: 8px;
 }
+/*
+ * 动作钮（「打开方式…」「在市场搜索阅读器」）——**颜色一律走插件自有色族**：
+ * 壳共享 `Button` 的 ghost 变体吃的是壳主题（--separator / --text-secondary / --hover-overlay /
+ * --text-primary），而本插件底色只有黑/白两档 ⇒ 浅主题坐夜间底（或反之）时按钮与钮内的字一起糊掉。
+ * 原意见 06-设计图 `.state .btn{background:#fff;border:1px solid var(--pg-line)}`——设计图本就固定白底，
+ * 跟主题是当初接共享件时接歪的，不是设计决定。
+ * 🔴 **只把圆角留给壳**（--radius-sm 由 `.ldk-button` 自带，本处刻意不写 border-radius）；
+ *    内边距与字号也照旧随共享件（尺寸类口径不在这里分叉）。
+ */
+.pdf-reader-error-actions .ldk-button {
+  background: var(--pdf-bg-page);
+  border-color: var(--pdf-border-page);
+  color: var(--pdf-ink-ui);
+}
+.pdf-reader-error-actions .ldk-button:hover:not(:disabled) {
+  background: var(--pdf-bg-page);
+  border-color: var(--pdf-accent);
+  color: var(--pdf-ink-ui);
+  opacity: 1;
+}
+.pdf-reader-error-actions .ldk-button:focus-visible {
+  outline: 2px solid var(--pdf-accent);
+  outline-offset: 1px;
+}
 
 /* ── 状态条（24px，跟壳主题）── */
 .pdf-reader-status {
