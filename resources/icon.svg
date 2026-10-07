@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <!-- ⚠️ 占位图——请替换成你自己插件的图标（同名同位置覆盖即可，plugin.json 的 icon 已指向本文件）。
+       写法与官方插件一致：界面里以 <img src="linkdesk://<id>/resources/icon.svg"> 显示，
+       是独立文档 ⇒ 引用不到 CSS 变量（var 形式在这里解析不出来），颜色必须自含实色。
+       🔴 上面那句为什么这么绕：XML 注释里禁止出现**连续两个连字符**——把 CSS 变量的字面量
+       原样写进注释，会让整份 SVG 解析失败，界面与市场直接显示破图（**且不报任何错**）。
+       要提这件事就写「CSS 变量」，别写出它的字面量。本文件早先就是这么坏的。
+       三图模型——本文件 = 界面小图标（要进图标栏需 appearsIn.iconBar，图标栏会强制单色染色，
+       进图标栏请换 resources/icon-bar.svg 那样的单色剪影）；市场彩色身份图 = marketIcon；
+       README 场景封面 = resources/cover.svg。各管各的，详见作者面 06 号《plugin.json 规范》§marketIcon。 -->
+  <defs>
+    <linearGradient id="phi_bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#64748B"/>
+      <stop offset="1" stop-color="#334155"/>
+    </linearGradient>
+    <linearGradient id="phi_glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.02"/>
+    </linearGradient>
+  </defs>
+  <!-- 中性灰品牌块：刻意不设计成有含义的图形——它的意思是「这里还没有图」 -->
+  <rect x="0" y="0" width="48" height="48" rx="10" fill="url(#phi_bg)"/>
+  <rect x="0" y="0" width="48" height="48" rx="10" fill="url(#phi_glass)"/>
+  <!-- 虚线框 + 加号 = 「把你的图放这儿」 -->
+  <rect x="13" y="13" width="22" height="22" rx="5" fill="none"
+        stroke="#FFFFFF" stroke-opacity="0.9" stroke-width="2"
+        stroke-dasharray="4 3" stroke-linecap="round"/>
+  <path d="M24 19.5v9M19.5 24h9" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"/>
+</svg>
