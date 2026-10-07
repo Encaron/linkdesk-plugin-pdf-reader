@@ -1,11 +1,170 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="640" height="320" viewBox="0 0 640 320">
-  <!-- README 场景封面占位——替换成你插件的真实截图/场景图（同名覆盖即可），
-       在 README.md 顶部引用（模板 README 里已有注释好的引用行，取消注释即用）：
-         ![<插件名> cover](resources/cover.svg)
-       ⚠️ 这张图只住 README（市场详情页「详情」页签的说明区）——它不是市场列表/详情头的身份图，
-       那个位置是 marketIcon（见 plugin.json 注释 / 作者面 06 号 §marketIcon）；
-       README 放图的完整规则见作者面 12 号《README 说明区媒体契约》。 -->
-  <rect x="0" y="0" width="640" height="320" rx="12" fill="#1E293B"/>
-  <rect x="170" y="110" width="300" height="100" rx="8" fill="none" stroke="#475569" stroke-width="2" stroke-dasharray="7 5"/>
-  <text x="320" y="166" fill="#64748B" font-family="sans-serif" font-size="17" text-anchor="middle">cover.svg — your scene here</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="640" viewBox="0 0 640 640" fill="none">
+  <!-- ============================================================
+       pdf-reader 封面 · 「纸的窗」                     [skill: ui-ux-pro-max]
+       理念：LinkDesk 阅读器 = 双击一个 .pdf，纸就落在窗口里。
+       画面画出插件**真实的夜间肌肤**——阅读区底色 #0f172a、纸面 #192134、
+       当前页缩略图与当前命中描边 #60a5fa、命中底色 #92600a（全部取自本仓
+       src/styles/tokens.css 的夜色档，不是编的）。左缘是缩略图侧栏（页位整本
+       铺、位图只挂窗口内，第三片被下缘裁掉一半），顶上浮着 T5 的搜索浮条，
+       底下状态条报「第几页 / 共几页」。窗后是暗色开发台面 + 双色辉光。
+       资产独立 SVG：颜色自含（封面美术不受壳主题 token 约束，同批官方封面口径）。
+       ============================================================ -->
+  <defs>
+    <radialGradient id="pv_bg" cx="0.5" cy="0.42" r="0.92">
+      <stop offset="0" stop-color="#17223c"/>
+      <stop offset="0.55" stop-color="#0c1223"/>
+      <stop offset="1" stop-color="#070a13"/>
+    </radialGradient>
+    <radialGradient id="pv_glowTL" cx="0.16" cy="0.06" r="0.72">
+      <stop offset="0" stop-color="#60a5fa" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#60a5fa" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="pv_glowBR" cx="0.9" cy="1.02" r="0.82">
+      <stop offset="0" stop-color="#2563eb" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#2563eb" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="pv_win" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#141c2e"/>
+      <stop offset="1" stop-color="#0f1522"/>
+    </linearGradient>
+    <linearGradient id="pv_chrome" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b2438"/>
+      <stop offset="1" stop-color="#161e2f"/>
+    </linearGradient>
+    <linearGradient id="pv_page" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1c2540"/>
+      <stop offset="1" stop-color="#182038"/>
+    </linearGradient>
+    <linearGradient id="pv_thumb" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1a2340"/>
+      <stop offset="1" stop-color="#161d33"/>
+    </linearGradient>
+    <filter id="pv_sh" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="24" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+    <filter id="pv_shPage" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="7" stdDeviation="11" flood-color="#000000" flood-opacity="0.55"/>
+    </filter>
+    <filter id="pv_shFloat" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="5" stdDeviation="9" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+    <clipPath id="pv_clipSide">
+      <rect x="36" y="144" width="120" height="374"/>
+    </clipPath>
+    <clipPath id="pv_clipPage">
+      <rect x="262" y="164" width="236" height="334" rx="3"/>
+    </clipPath>
+  </defs>
+
+  <!-- ── 台面 ─────────────────────────────────────────────── -->
+  <rect width="640" height="640" fill="url(#pv_bg)"/>
+  <rect width="640" height="640" fill="url(#pv_glowTL)"/>
+  <rect width="640" height="640" fill="url(#pv_glowBR)"/>
+
+  <!-- ── 窗口 ─────────────────────────────────────────────── -->
+  <rect x="36" y="100" width="568" height="448" rx="18" fill="url(#pv_win)" stroke="#ffffff" stroke-opacity="0.09" filter="url(#pv_sh)"/>
+
+  <!-- 工具栏（44px） -->
+  <path d="M54 100 h532 a18 18 0 0 1 18 18 v26 H36 v-26 a18 18 0 0 1 18 -18 z" fill="url(#pv_chrome)"/>
+  <rect x="36" y="143.5" width="568" height="1" fill="#ffffff" opacity="0.07"/>
+
+  <!-- 侧栏开合钮（工具栏最左那颗） -->
+  <rect x="50" y="112" width="17" height="15" rx="2.5" fill="none" stroke="#94a3b8" stroke-width="1.3" stroke-opacity="0.85"/>
+  <rect x="50.8" y="112.8" width="5.2" height="13.4" rx="1.8" fill="#60a5fa" fill-opacity="0.62"/>
+
+  <!-- 插件图标（本仓 resources/icon.svg 的几何，等比 0.85） -->
+  <g transform="translate(74,111) scale(0.85)">
+    <rect x="4.5" y="2.5" width="15" height="19" rx="2.5" fill="#b8432e"/>
+    <path d="M14.5 2.5V8H19.5z" fill="#ffffff" opacity="0.32"/>
+    <rect x="7.5" y="11" width="9" height="2.6" rx="1.3" fill="#ffffff"/>
+    <rect x="7.5" y="15.4" width="6" height="2.6" rx="1.3" fill="#ffffff" opacity="0.72"/>
+  </g>
+  <text x="100" y="129" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="12.5" fill="#dbe3f2">产品规格说明书.pdf</text>
+
+  <!-- 工具栏右组：搜索钮 · 缩放 −120% ＋ · 页码框 -->
+  <circle cx="402" cy="122" r="5.6" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+  <path d="M406.4 126.4 L411 131" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M430 122 h12" stroke="#cbd5e1" stroke-width="1.6" stroke-linecap="round"/>
+  <text x="462" y="126" font-family="Consolas, 'JetBrains Mono', monospace" font-size="11.5" fill="#e2e8f0" text-anchor="middle">120%</text>
+  <path d="M484 122 h12" stroke="#cbd5e1" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="M490 116 v12" stroke="#cbd5e1" stroke-width="1.6" stroke-linecap="round"/>
+  <rect x="510" y="110" width="74" height="24" rx="6" fill="#0f1626" stroke="#ffffff" stroke-opacity="0.10"/>
+  <text x="547" y="126" font-family="Consolas, 'JetBrains Mono', monospace" font-size="11.5" fill="#e2e8f0" text-anchor="middle">2 / 20</text>
+
+  <!-- ── 左缘缩略图侧栏（120px，真身 180px）━━━━━━━━━━━━━━━ -->
+  <rect x="36" y="144" width="120" height="374" fill="#0b1120"/>
+  <rect x="155.5" y="144" width="1" height="374" fill="#ffffff" opacity="0.07"/>
+  <g clip-path="url(#pv_clipSide)">
+    <!-- 第 1 页 -->
+    <rect x="44" y="152" width="104" height="147" rx="2.5" fill="url(#pv_thumb)" stroke="#ffffff" stroke-opacity="0.09"/>
+    <rect x="54" y="170" width="46" height="4" rx="2" fill="#94a3b8" opacity="0.5"/>
+    <rect x="54" y="186" width="84" height="3" rx="1.5" fill="#94a3b8" opacity="0.26"/>
+    <rect x="54" y="195" width="84" height="3" rx="1.5" fill="#94a3b8" opacity="0.26"/>
+    <rect x="54" y="204" width="62" height="3" rx="1.5" fill="#94a3b8" opacity="0.26"/>
+    <rect x="54" y="219" width="84" height="3" rx="1.5" fill="#94a3b8" opacity="0.26"/>
+    <rect x="54" y="228" width="78" height="3" rx="1.5" fill="#94a3b8" opacity="0.26"/>
+    <!-- 第 2 页 = 当前页（accent 描边，即 aria-current="page" 的画法） -->
+    <rect x="43" y="306" width="106" height="149" rx="3" fill="none" stroke="#60a5fa" stroke-width="2"/>
+    <rect x="44" y="307" width="104" height="147" rx="2.5" fill="url(#pv_thumb)"/>
+    <rect x="54" y="325" width="52" height="4" rx="2" fill="#e2e8f0" opacity="0.62"/>
+    <rect x="54" y="341" width="84" height="3" rx="1.5" fill="#94a3b8" opacity="0.3"/>
+    <rect x="54" y="350" width="84" height="3" rx="1.5" fill="#94a3b8" opacity="0.3"/>
+    <rect x="54" y="359" width="70" height="3" rx="1.5" fill="#94a3b8" opacity="0.3"/>
+    <rect x="54" y="374" width="84" height="3" rx="1.5" fill="#94a3b8" opacity="0.3"/>
+    <rect x="54" y="383" width="56" height="3" rx="1.5" fill="#94a3b8" opacity="0.3"/>
+    <!-- 第 3 页（被下缘裁掉一半——列表本来就是滚动的） -->
+    <rect x="44" y="462" width="104" height="147" rx="2.5" fill="url(#pv_thumb)" stroke="#ffffff" stroke-opacity="0.09"/>
+    <rect x="54" y="480" width="48" height="4" rx="2" fill="#94a3b8" opacity="0.5"/>
+    <rect x="54" y="496" width="84" height="3" rx="1.5" fill="#94a3b8" opacity="0.26"/>
+  </g>
+
+  <!-- ── 阅读区 ───────────────────────────────────────────── -->
+  <rect x="156" y="144" width="448" height="374" fill="#0f172a"/>
+
+  <!-- 纸（A4 比例 236 × 334） -->
+  <rect x="262" y="164" width="236" height="334" rx="3" fill="url(#pv_page)" stroke="#ffffff" stroke-opacity="0.08" filter="url(#pv_shPage)"/>
+  <g clip-path="url(#pv_clipPage)">
+    <!-- 标题 -->
+    <rect x="286" y="190" width="128" height="8" rx="4" fill="#e2e8f0" opacity="0.82"/>
+    <rect x="286" y="205" width="86" height="5" rx="2.5" fill="#94a3b8" opacity="0.42"/>
+    <rect x="286" y="222" width="188" height="1" fill="#ffffff" opacity="0.08"/>
+    <!-- 正文段 1 -->
+    <rect x="286" y="238" width="188" height="5" rx="2.5" fill="#94a3b8" opacity="0.34"/>
+    <rect x="286" y="251" width="188" height="5" rx="2.5" fill="#94a3b8" opacity="0.34"/>
+    <rect x="286" y="264" width="150" height="5" rx="2.5" fill="#94a3b8" opacity="0.34"/>
+    <rect x="286" y="277" width="188" height="5" rx="2.5" fill="#94a3b8" opacity="0.34"/>
+    <!-- 正文段 2：一段里两处命中（后一处 = 当前命中，accent 描边） -->
+    <rect x="286" y="299" width="188" height="5" rx="2.5" fill="#94a3b8" opacity="0.34"/>
+    <rect x="286" y="312" width="112" height="5" rx="2.5" fill="#94a3b8" opacity="0.34"/>
+    <rect x="404" y="310" width="34" height="9" rx="2" fill="#92600a"/>
+    <rect x="407" y="312" width="28" height="5" rx="2.5" fill="#fde68a" opacity="0.72"/>
+    <rect x="286" y="325" width="188" height="5" rx="2.5" fill="#94a3b8" opacity="0.34"/>
+    <rect x="286" y="338" width="132" height="5" rx="2.5" fill="#94a3b8" opacity="0.34"/>
+    <rect x="424" y="336" width="40" height="9" rx="2" fill="#92600a" stroke="#60a5fa" stroke-width="1.4"/>
+    <rect x="428" y="338" width="33" height="5" rx="2.5" fill="#fde68a" opacity="0.85"/>
+    <rect x="286" y="351" width="188" height="5" rx="2.5" fill="#94a3b8" opacity="0.34"/>
+    <!-- 正文段 3 -->
+    <rect x="286" y="373" width="188" height="5" rx="2.5" fill="#94a3b8" opacity="0.34"/>
+    <rect x="286" y="386" width="164" height="5" rx="2.5" fill="#94a3b8" opacity="0.34"/>
+    <rect x="286" y="399" width="188" height="5" rx="2.5" fill="#94a3b8" opacity="0.34"/>
+    <rect x="286" y="412" width="96" height="5" rx="2.5" fill="#94a3b8" opacity="0.34"/>
+    <!-- 页脚页码 -->
+    <text x="380" y="470" font-family="Consolas, 'JetBrains Mono', monospace" font-size="9.5" fill="#94a3b8" fill-opacity="0.55" text-anchor="middle">2</text>
+  </g>
+
+  <!-- T5 搜索浮条（浮在阅读区顶上，不占版面宽度） -->
+  <rect x="376" y="156" width="204" height="30" rx="8" fill="#141c2e" stroke="#ffffff" stroke-opacity="0.11" filter="url(#pv_shFloat)"/>
+  <circle cx="394" cy="171" r="5.2" fill="none" stroke="#94a3b8" stroke-width="1.4"/>
+  <path d="M398.2 175.2 L402 179" stroke="#94a3b8" stroke-width="1.4" stroke-linecap="round"/>
+  <text x="410" y="175" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11.5" fill="#e2e8f0">Page</text>
+  <text x="506" y="175" font-family="Consolas, 'JetBrains Mono', monospace" font-size="11" fill="#60a5fa" text-anchor="end">2 / 6</text>
+  <path d="M524 171.5 L530 165.5 L536 171.5" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M524 176.5 L530 182.5 L536 176.5" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M554 165 L566 177 M566 165 L554 177" stroke="#60a5fa" stroke-width="1.6" stroke-linecap="round"/>
+
+  <!-- ── 状态条（30px） ───────────────────────────────────── -->
+  <path d="M36 518 h568 v12 a18 18 0 0 1 -18 18 H54 a18 18 0 0 1 -18 -18 z" fill="url(#pv_chrome)"/>
+  <rect x="36" y="518" width="568" height="1" fill="#ffffff" opacity="0.07"/>
+  <text x="56" y="537" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" fill="#94a3b8">第 2 页 / 共 20 页</text>
+  <text x="584" y="537" font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="11" fill="#94a3b8" text-anchor="end">适宽 · 120%</text>
 </svg>

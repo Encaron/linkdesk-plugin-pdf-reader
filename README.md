@@ -1,60 +1,92 @@
-# Pdf Reader
+# PDF 阅读器（pdf-reader）
 
-> One line: what this plugin does. (Keep it at the very top — this file is what the marketplace shows on the **Details** tab.)
+![PDF 阅读器 场景封面「纸的窗」——左缘缩略图侧栏（当前页描蓝边）、右侧夜色纸面与两处搜索命中（后一处是当前命中）、顶上搜索浮条、底部状态条](resources/cover.svg)
 
-<!-- When you have cover art, put the image at resources/cover.svg and uncomment the line below:
-![Pdf Reader cover](resources/cover.svg) -->
+> LinkDesk 官方示例级插件 · 认领 `.pdf`（`fileAssociations`）· 可整体卸载
+> **一句话：** 双击一个 `.pdf`，纸就落在窗口里——渲染、翻页、缩放、缩略图、目录、搜索都在；把它卸掉，`.pdf` 就退回系统默认程序，软件里不留痕迹。
 
-## How to use
+它替的是「点开 PDF 却只弹一句『没有应用可以打开』」那个空档：LinkDesk 是空壳，文件树、搜索、终端都只是**导航**；真正把一份文档**读出来**的地方，是阅读器这一张桌。这里不发明阅读器的规矩——左缘缩略图、右上搜索、页面居中、状态条报页码——都是你用任何阅读器时已经长在手上的那套。
 
-How to open it in LinkDesk, where to click, what you should see. Spell out the path a first-time user walks.
+## 它能做什么
 
-## Directory layout — where things go
+- **双击即开**——在文件树 / 资源管理器里双击任意 `.pdf`，以一个新标签页打开真阅读器；同一文件再次打开会聚焦已有标签（`tabBehavior.identityField = "filePath"` 单通道身份）。
+- **真渲染，不是预览**——pdf.js 引擎逐页画到 canvas 上；cmaps 与标准字体随包带走（中日韩与 CID 字体文档不会画成方块）。
+- **左缘侧栏一夹两个面**——**缩略图**（页位整本都铺、位图只挂当前窗口 ±2，滚动条长度等于整本文档；当前页描蓝边并带 `aria-current="page"`）＋**目录树**（三种 dest 形都真跳：引用形 / 具名 / 0-based 整数；解不出页码的条目渲染成**不可点的标题**，⛔ 不立假按钮）。
+- **翻页与缩放**——上一页 / 下一页、跳转到指定页、放大 / 缩小 / 设置倍率、**适宽** / **适页**（随窗口尺寸变化重算）。
+- **文本层：能选、能搜**——划选复制；**页内与整篇搜索**，命中逐处高亮、当前命中用强调色标出，浮条报「第几处 / 共几处」。
+- **阅读底色两组：纸白 / 夜间**——阅读区**有意不跟壳主题**（见下），工具栏与状态条照旧跟主题。
+- **12 条命令**——全部可在命令面板与 `linkdeskctl` 里调到（见「命令」），没有的一条不立。
+- **卸载即退回**——`fileAssociations` 是**声明式**关联：插件在，`.pdf` 归它；插件卸掉，`.pdf` 回到系统默认程序，Windows 的「打开方式」里也不再出现它。
 
-You do not need to pre-create empty folders (git does not track them). **Create them when you need them; the table below says where.**
+## 上手（第一次怎么走）
 
-| Path | What goes here | When it exists |
+1. 在文件树里找到任意 `.pdf`，**双击**（或右键「打开方式…」选 PDF 阅读器）。
+2. 页面出现后：**滚轮**上下翻，**PageDown / PageUp** 或 **← →** 翻页；**Ctrl + 滚轮**缩放。
+3. 想跳远页：点工具栏最左那颗钮**开侧栏**，点缩略图或目录条目直接落页——开栏时会自动把列表摆到当前页（只摆一次，之后你翻页不抢你的滚动条）。
+4. 想找词：点工具栏放大镜（或命令 `pdf-reader.openSearch`），条里的计数告诉你「第几处 / 共几处」，`Esc` 关条。
+5. 嫌白底刺眼：命令 `pdf-reader.setBackground` 切 `night`。
+6. 不想要了：插件市场里**卸载**——`.pdf` 立刻交还系统。
+
+## 键盘与滚轮
+
+| 操作 | 效果 |
+|:--|:--|
+| `PageDown` / `→` | 下一页（到最后一页如实不动，不假装翻过） |
+| `PageUp` / `←` | 上一页（到第一页同上） |
+| `Ctrl` + 滚轮 | 缩放（上滚放大、下滚缩小，范围 25%–400%） |
+| `Enter` | 工具栏页码框里回车 → 跳到该页 |
+| `Esc` | 关掉搜索条 |
+
+> 键位**住在阅读器视图内部**（本插件不占壳的全局键位声明）——所以它只在你正看着一份 PDF 时生效，不会在别的标签里截你的按键。
+
+## 设置一览（设置 → PDF 阅读器）
+
+| 键 | 类型 | 默认 | 说明 |
+|:--|:--|:--|:--|
+| `pdf-reader.defaultZoom` | `fitWidth` / `fitPage` / `percent` | `fitWidth` | 打开时的初始缩放档：适宽（按窗口宽度）/ 适页（整页可见）/ 100%（原始倍率）。**你手动缩放过之后，本次阅读不再跟随它**——设置管的是「初始」，不是「每页强行重设」。 |
+
+## 命令（12 条）
+
+命令面板（`Ctrl+Shift+P`）与 `linkdeskctl` 走**同一张注册表**，一条命令两处都在。
+
+| 命令 id | 标题 | 说明 |
 |:--|:--|:--|
-| `plugin.json` | The plugin manifest | **Always** |
-| `README.md` | Description — the data source for the marketplace **Details** tab | Strongly recommended |
-| `CHANGELOG.md` | Release notes — the data source for the marketplace **Changelog** tab | Strongly recommended |
-| `resources/` | Assets — **three preset placeholders, each with a job comment inside**: `icon.svg` (small in-app icon) / `icon-bar.svg` (Icon Bar single-colour glyph) / `cover.svg` (README cover), plus any images referenced from the README | Always (replace the placeholders) |
-| `i18n/` | `en.json` (key = the source string; **do not create `zh.json`**) | Once you have UI text |
-| `themes/` · `languages/` · `snippets/` | Payloads for data-only plugins | Data-only plugins |
-| `src/index.tsx` | Entry (the `entry` in `plugin.json`) — also calls `registerPluginCommands()` **at the top level** (command handlers must work viewless; the top-level side effect is the only registration moment) | Always for view plugins |
-| `src/commands.ts` | Command sample — a runnable `hello` command (handler here; its title/description/params live in `plugin.json`'s `contributes.commands[]` — change both in the same stroke). Spec + checklist: author doc `21-command-ification-spec.md` | Add commands here |
-| `src/views/` | Sidebar / panel view components (the files `contributes.views` points at) | Once you have views |
-| `src/components/` | Components reused inside this plugin | When needed |
-| `src/services/` | Domain logic / IPC wrappers / data layer | When needed |
-| `src/styles/` | **Multiple** CSS files — keep them together here (a single file next to the entry is fine too) | When needed |
-| `src/__tests__/` | Unit tests — **test tooling is preinstalled** (`vitest` / `jsdom` / `@testing-library/react` are already in `devDependencies`); the `window.linkdesk` mock is **not** in this repo — `vitest.setup.ts` is a one-line pointer to the shared ground in `@linkdesk/plugin-sdk`, so just write tests and run `npm run test` | When needed |
+| `pdf-reader.pageNext` | 下一页 | 等同工具栏下一页钮与 `PageDown`；已在最后一页如实回 `noop` |
+| `pdf-reader.pagePrev` | 上一页 | 等同工具栏上一页钮与 `PageUp`；已在第一页如实回 `noop` |
+| `pdf-reader.gotoPage` | 跳转到指定页 | 页码 **1-based**（从 1 起，不是下标）；越界或非整数如实回 `ok:false` |
+| `pdf-reader.zoomIn` | 放大 | 放大一档（×1.2）；到上限回 `noop` ＋ `reason=at-max-zoom` |
+| `pdf-reader.zoomOut` | 缩小 | 缩小一档（÷1.2）；到下限回 `noop` ＋ `reason=at-min-zoom` |
+| `pdf-reader.zoomTo` | 设置缩放倍率 | 设成指定倍率（`1` = 100%，范围 `0.25`–`4.0`）——工具栏「点一下回 100%」的通用形 |
+| `pdf-reader.fitWidth` | 适宽 | 页宽铺满阅读区，随窗口尺寸重算；本来就是适宽则回 `noop` |
+| `pdf-reader.fitPage` | 适页 | 整页可见，随窗口尺寸重算；本来就是适页则回 `noop` |
+| `pdf-reader.setBackground` | 设置阅读底色 | `paper` = 纸白 / `night` = 夜间；档位非法回 `ok:false` |
+| `pdf-reader.toggleSidebar` | 切换缩略图侧栏 | 开关左缘那一条（等同工具栏最左那颗钮），回执带翻转**之后读回**的值 |
+| `pdf-reader.openSearch` | 搜索 | 展开阅读区顶上的搜索条；**幂等**——本来就开着如实回 `noop`，⛔ 不当失败。只负责「开」，关条按 `Esc` |
+| `pdf-reader.getStatus` | 读取阅读器状态 | 读结构化状态（当前页 / 总页数 / 倍率 / 缩放档 / 底色 / 侧栏开合 / 目录条数 / 搜索），与状态条同源一份数据 |
 
-> 🔴 **Shared things do not belong here** — components/hooks reused across plugins come from `@linkdesk/ui` (the public package the shell provides; it is already declared in `package.json` as `"latest"`, which resolves to the shell's current version line when you install — pin it to a specific shell version if you need a floor). The shell supplies that one instance at runtime, so **do not import its css** and **do not write a second copy inside your plugin**. Only logic that belongs to this plugin stays local.
-> 🔴 **Assets always live in `resources/` — no loose images in the plugin root.** What gets into the install package is what is **referenced by the README** or **declared by `icon` / `marketIcon`**; the directory name itself has no magic.
-> 🔴 **Every import from `@linkdesk/ui` sets your `minAppVersion` floor** — that field is the oldest shell your plugin can run on, **not the shell you happened to test with**. An export that does not exist in that shell means the plugin **fails to load as a whole**, not that one component is missing. Since the dependency is `"latest"`, the gate has to compute the real floor for you: after changing your imports, run `npm run lint` and put the value it reports into `plugin.json`'s `minAppVersion`. (The `latest` dependency is only safe because something recomputes the floor — that is the pair.) What ships in this template is already the floor for the imports this template makes.
+> 回执纪律：**做得到就做，做不到就如实说**——到边界回 `noop`（不是 `ok` 也不是失败），参数不合法回 `ok:false` ＋ `reason`。这套口径是为 AI 读数用的：一条命令回 `noop` 时，你不能把它当成「翻过去了」。
 
-## Three rules for this plugin
+## 阅读底色为什么不跟壳主题
 
-1. **Colors come from theme variables** — always `var(--xxx)` in CSS, **never a hard-coded hex**. Reason: LinkDesk supports full theme replacement, so a fixed color means your plugin does not follow the theme.
-2. **UI text goes through `t()`** — `t("source string")`, with English in `i18n/en.json` and **no `zh.json`** (the source string is the key and is its own fallback). **Only add keys you actually read with `t()`** — an unread key is a dead key. Code identifiers (`src/index.tsx` and friends) are not copy — do not wrap them in `t()`.
-3. **Plugin identity comes only from declared fields in `plugin.json`** — declare whatever capability you need (`contributes` / `tabBehavior` / `icon` …). **Never make other people guess what your plugin is from a directory name or file location.**
+工具栏和状态条跟壳主题走（切主题它们跟着变）；**阅读区不跟**，只有「纸白 / 夜间」两档，由本插件的 `src/styles/tokens.css` 自持。
 
-**Dev preview note:** the dev host (`npm run dev`) gives your view a **fixed-height root container** (`#ld-root`) — write `height: 100%` on your root element with confidence and it fills the preview. You never need ResizeObserver self-healing or a "just in case" fallback layer; if your panel still renders collapsed or transparent in the preview, report it — don't code around it.
+这是**用户拍板的有意例外**，不是漏做：PDF 的观感基准是**纸**——白底黑字是绝大多数文档的排版前提，编辑器可以随主题变暗，但「把一页纸读出来」这件事不该因为换了主题就换个颜色。所以切壳主题时阅读区纹丝不动，是**判据**，不是缺陷。
 
-## Publishing
+## 结构（给维护者）
 
-```bash
-npm run publish     # create the GitHub Release + upload the .linkdesk-plugin + update the catalog
-```
+| 落点 | 是什么 |
+|:--|:--|
+| `src/services/pdfDoc/` | pdf.js 引擎面（打开 / 渲染 / 文本层 / 目录 / dest 解页码）——**pdf.js 类型不越出这一层** |
+| `src/views/ReaderView.tsx` | 阅读器视图：工具栏 ＋ 阅读区 ＋ 侧栏 ＋ 状态条的行布局 |
+| `src/views/readerSurface/` | 阅读区（页位整本铺、位图只挂窗口内 ±2、文本层、命中高亮） |
+| `src/views/outlineSidebar/` | 左缘一夹两个面：缩略图条 ＋ 目录树（180px 真列，⛔ 不是浮层） |
+| `src/views/readerToolbar/` · `src/components/SearchBar.tsx` | 工具栏与搜索浮条（浮条**故意不改版面宽度**——搜索不该让纸变窄） |
+| `src/utils/pagination.ts` · `src/utils/thumbs.ts` | 纯函数：可视窗口、槽位高度与位图缩放 |
+| `src/components/errorCopy.ts` | 错误态选键（读不出 / 不是 PDF / 加密三档），中文 key → `i18n/en.json` |
+| `src/styles/tokens.css` | 阅读区色值的**唯一出处**（日夜两档）；别的 CSS 只引 `var(--pdf-*)` |
+| `src/__tests__/` | 单测与组件测试（纯逻辑 + 组件，替身照契约不照实现） |
 
-The first publish needs a GitHub token (the command walks you through it once and stores it locally). To see what it would do without doing it: `npm run publish -- --dry-run`.
+## 相关
 
-Publishing also requires this project to be **pushed to GitHub** (`publish` uses your project's `origin` to create the Release):
-
-```bash
-git remote add origin git@github.com:<you>/<repo>.git
-git push -u origin main
-```
-
-> The scaffold already created this repository for you (`main` branch + one initial commit), so this step is only about wiring the remote.
-> If you generated with `--no-git`, run `git init -b main` and commit first.
+- 插件市场的「详情」页签展示的就是**这一份 README**；图与视频的写法规则见作者面 *README 说明区媒体契约*，媒体一律住 `resources/`。
+- 认领 `.pdf` 靠 `plugin.json` 的 `contributes.fileAssociations`；卸载后 `.pdf` 回到系统默认程序。
