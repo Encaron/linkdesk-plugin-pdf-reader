@@ -10,8 +10,10 @@ import { useSyncExternalStore } from "react";
 import { PAGE_GAP, READING_PAD } from "../constants";
 import { loadPdf, PdfOpenError, type PdfDocument, type PageSize } from "../services/pdfDoc";
 import { clampScale, fitPageScale, fitWidthScale, zoomInScale, zoomOutScale } from "../utils/zoom";
+import type { ZoomMode } from "../utils/zoom";
 
-export type ZoomMode = "percent" | "fitWidth" | "fitPage";
+/** ZoomMode 的唯一定义在 utils/zoom（配置解析也用同一个联合类型）——此处转出，既有导入路径不破 */
+export type { ZoomMode };
 /** 底色档：纸白｜夜间（用户 2026-10-07 拍板两档；sepia 留档不建枚举值——无死代码） */
 export type ReaderBg = "paper" | "night";
 
@@ -55,6 +57,8 @@ export class ReaderStore {
   private listeners = new Set<() => void>();
   private openSeq = 0;
   private scrollNonce = 0;
+  /** 用户是否自己缩放过（任一缩放动作置真）——配置默认档只在它还是 false 时生效 */
+  private userZoomed = false;
   private state: ReaderState = {
     phase: { kind: "loading" },
     numPages: 0,
@@ -62,7 +66,7 @@ export class ReaderStore {
     pageSizes: new Map(),
     sizesVersion: 0,
     currentPage: 1,
-    // v1 出厂默认适宽（用户拍板；T4 接配置 pdfReader.defaultZoom）
+    // 出厂默认适宽（用户拍板）；视图挂载时若有配置 pdf-reader.defaultZoom 则经 applyDefaultZoom 覆盖
     scale: 1,
     zoomMode: "fitWidth",
     bg: "paper",
@@ -182,22 +186,37 @@ export class ReaderStore {
 
   // ── 缩放 ──
   zoomIn(): void {
+    this.userZoomed = true;
     this.set({ scale: zoomInScale(this.state.scale), zoomMode: "percent" });
   }
 
   zoomOut(): void {
+    this.userZoomed = true;
     this.set({ scale: zoomOutScale(this.state.scale), zoomMode: "percent" });
   }
 
-  /** 百分比钮点击回 100%；带参即任意倍率（T4 pdfReader.zoomTo） */
+  /** 百分比钮点击回 100%；带参即任意倍率（T4 pdf-reader.zoomTo） */
   zoomTo(scale: number): void {
+    this.userZoomed = true;
     this.set({ scale: clampScale(scale), zoomMode: "percent" });
   }
 
   /** 适宽/适页是模式（窗口 resize 跟随）；percent = 自由倍率，保持当前 scale */
   setZoomMode(mode: ZoomMode): void {
+    this.userZoomed = true;
     if (mode === this.state.zoomMode) return;
     this.set({ zoomMode: mode });
+    this.recomputeFit();
+  }
+
+  /**
+   * 应用配置项 `pdf-reader.defaultZoom`（T4）——只在用户还没自己缩放过时生效。
+   * 用户一动缩放（钮／命令）就地锁定，之后的配置读数不再回头覆盖（配置是异步读来的，
+   * 晚到的那一拍不能踩掉用户刚做的操作）。percent 档的「默认」即 100%（倍率 1）。
+   */
+  applyDefaultZoom(mode: ZoomMode): void {
+    if (this.userZoomed || mode === this.state.zoomMode) return;
+    this.set(mode === "percent" ? { zoomMode: mode, scale: 1 } : { zoomMode: mode });
     this.recomputeFit();
   }
 

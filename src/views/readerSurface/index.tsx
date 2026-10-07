@@ -190,14 +190,20 @@ export function ReaderSurface({ store }: { store: ReaderStore }) {
     const prevScale = prevScaleRef.current;
     prevScaleRef.current = s.scale;
     if (!el || prevScale === s.scale || heights.length === 0) return;
-    const { page, rel } = anchorRef.current;
+    // 🔴 锚定页以 **store 的 currentPage**（真相源）为准，⛔ 不认 anchorRef 的页——那个 ref 只在
+    // 滚动 rAF 里刷新：`gotoPage`/命令换页是**程序化改 scrollTop**，紧随其后的换档读到的还是旧页
+    // （实测：jump 到 20 页后换档 ⇒ `scrollTop` 被锚回 0 ⇒ 回执/状态条变成「第 1 页」，而 DOM 已由
+    // scrollTarget 摆回 20 页 —— 两处读数当场分叉）。`rel` 只在 ref 与真相源同页时才可信。
+    const anchorPage = anchorRef.current.page;
+    const page = s.currentPage || anchorPage;
+    const rel = anchorPage === page ? anchorRef.current.rel : 0;
     const oldOff = anchorOffsetRef.current;
     const newOff = offsets[page - 1] ?? 0;
     const ratio = oldOff > 0 ? newOff / oldOff : 1;
     el.scrollTop = Math.max(0, newOff + rel * ratio);
-  }, [s.scale, offsets, heights]);
+  }, [s.scale, s.currentPage, offsets, heights]);
   useLayoutEffect(() => {
-    const page = anchorRef.current.page;
+    const page = s.currentPage || anchorRef.current.page;
     anchorOffsetRef.current = offsets[page - 1] ?? 0;
   });
 

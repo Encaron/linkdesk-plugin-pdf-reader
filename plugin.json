@@ -27,9 +27,196 @@
 
   // ── 贡献点 ──
   "contributes": {
-    // 自带翻译：key = 中文原文，英译住本仓（谁的仓谁译文）。
+    // 自带翻译：key = 中文原文，英译住本仓（谁的仓谁译文）——en 覆盖含命令标题、配置行名与枚举显示名。
     "i18n": { "en": "i18n/en.json" },
     // 一行声明接管 pdf 单击与 OS 打开方式（不带 role——pdf 是二进制，不是 text-fallback 的地盘）。
-    "fileAssociations": [{ "extension": "pdf", "displayName": "PDF" }]
+    "fileAssociations": [{ "extension": "pdf", "displayName": "PDF" }],
+
+    // ── 配置项（T4 定案：只此一条——2026-10-07 用户拍板 fitWidth）──
+    // 键名 = <pluginId>.<property>（`check-config-ownership` 的结构判据）；
+    // title 是设置页行名短名（`check-config-titles` 三族判据），中文原文必须住本仓字典。
+    "configuration": {
+      "title": "PDF 阅读器",
+      "properties": {
+        "pdf-reader.defaultZoom": {
+          "type": "string",
+          "enum": ["fitWidth", "fitPage", "percent"],
+          "enumDescriptions": {
+            "fitWidth": "适宽（按窗口宽度）",
+            "fitPage": "适页（整页可见）",
+            "percent": "100%（原始倍率）"
+          },
+          "default": "fitWidth",
+          "title": "默认缩放",
+          "description": "打开 PDF 时的初始缩放档；你手动缩放过后本次阅读不再跟随它。"
+        }
+      }
+    },
+    "configurationDefaults": {
+      "pdf-reader.defaultZoom": "fitWidth"
+    },
+
+    // ── 命令面（T4：每个用户动作都有非鼠标路径——命令面板/键位/AI 走同一条路）──
+    // 规矩（21-插件命令化规范）：① id 第一段恒为本仓 pluginId（`check-command-ownership`）；
+    // ② description 写「意图」不重复 id（AI 就靠这一句挑命令）；③ params 逐位写全，调用方不必读源码猜参数；
+    // ④ 目标可点名（sourceId = 该 pdf 的完整路径，多 pdf 下各自独立；缺省 = 活跃标签里那一份）。
+    // 回执三态：真做了 { ok:true, sourceId, field, previous, value } ／ 没改但**不是失败**
+    // { ok:true, noop:true, reason } ／ 这次**调用**有问题 { ok:false, noop:true, reason, error }。
+    "commands": [
+      {
+        "id": "pdf-reader.pageNext",
+        "title": "下一页",
+        "category": "PDF 阅读器",
+        "when": "activeEditor == 'pdf-reader'",
+        "description": "往后翻一页（等于工具栏的下一页钮与键盘 PageDown）。已在最后一页时如实回 noop，不假装翻过。回执 { ok, sourceId, field:\"currentPage\", previous, value, numPages }。前提：已有一份打开的 PDF（一份都没挂时回 no-document）。",
+        "params": [
+          {
+            "name": "args",
+            "type": "object",
+            "description": "{ sourceId? }——点名要翻哪一份阅读器（sourceId = 该 pdf 的完整路径）；缺省 = 当前活跃标签里的那一份。清单读 pdf-reader.getStatus"
+          }
+        ]
+      },
+      {
+        "id": "pdf-reader.pagePrev",
+        "title": "上一页",
+        "category": "PDF 阅读器",
+        "when": "activeEditor == 'pdf-reader'",
+        "description": "往前翻一页（等于工具栏的上一页钮与键盘 PageUp）。已在第一页时如实回 noop。回执同 pdf-reader.pageNext。",
+        "params": [
+          {
+            "name": "args",
+            "type": "object",
+            "description": "{ sourceId? }——点名要翻哪一份阅读器；缺省 = 当前活跃标签里的那一份"
+          }
+        ]
+      },
+      {
+        "id": "pdf-reader.gotoPage",
+        "title": "跳转到指定页",
+        "category": "PDF 阅读器",
+        "when": "activeEditor == 'pdf-reader'",
+        "description": "跳到指定页（等于页码框回车；页码 1-based，从 1 起不是下标）。越界或非整数如实回 ok:false ＋ reason=out-of-range｜bad-page（并报出总页数）。回执 { ok, sourceId, field:\"currentPage\", previous, value, numPages }。",
+        "params": [
+          {
+            "name": "args",
+            "type": "object",
+            "description": "{ page: number（必填，1-based 目标页）, sourceId? }——例 { \"page\": 12 }；也可逐位传 (12)"
+          }
+        ]
+      },
+      {
+        "id": "pdf-reader.zoomIn",
+        "title": "放大",
+        "category": "PDF 阅读器",
+        "when": "activeEditor == 'pdf-reader'",
+        "description": "放大一档（×1.2，范围 25%–400%）。已在上限回 noop ＋ reason=at-max-zoom。回执 { ok, sourceId, field:\"scale\", previous, value, zoomMode }——scale 是倍率（1 = 100%）。",
+        "params": [
+          {
+            "name": "args",
+            "type": "object",
+            "description": "{ sourceId? }——点名要缩哪一份阅读器；缺省 = 当前活跃标签里的那一份"
+          }
+        ]
+      },
+      {
+        "id": "pdf-reader.zoomOut",
+        "title": "缩小",
+        "category": "PDF 阅读器",
+        "when": "activeEditor == 'pdf-reader'",
+        "description": "缩小一档（÷1.2，范围 25%–400%）。已在下限回 noop ＋ reason=at-min-zoom。回执同 pdf-reader.zoomIn。",
+        "params": [
+          {
+            "name": "args",
+            "type": "object",
+            "description": "{ sourceId? }——点名要缩哪一份阅读器；缺省 = 当前活跃标签里的那一份"
+          }
+        ]
+      },
+      {
+        "id": "pdf-reader.zoomTo",
+        "title": "设置缩放倍率",
+        "category": "PDF 阅读器",
+        "when": "activeEditor == 'pdf-reader'",
+        "description": "把缩放设成指定倍率（1 = 100%，范围 0.25–4.0）——工具栏「点击回 100%」的通用形（传 { \"scale\": 1 }）。越界回 ok:false ＋ reason=out-of-range｜bad-scale。回执 { ok, sourceId, field:\"scale\", previous, value, zoomMode }。",
+        "params": [
+          {
+            "name": "args",
+            "type": "object",
+            "description": "{ scale: number（必填，倍率 1 = 100%，范围 0.25–4.0）, sourceId? }——例 { \"scale\": 1.5 } 即 150%；也可逐位传 (1.5)"
+          }
+        ]
+      },
+      {
+        "id": "pdf-reader.fitWidth",
+        "title": "适宽",
+        "category": "PDF 阅读器",
+        "when": "activeEditor == 'pdf-reader'",
+        "description": "缩放档切成适宽（页宽铺满阅读区，随窗口尺寸变化重算）。本来就是适宽则回 noop ＋ reason=already-fit-width。回执 { ok, sourceId, field:\"zoomMode\", previous, value, scale }。",
+        "params": [
+          {
+            "name": "args",
+            "type": "object",
+            "description": "{ sourceId? }——点名要切哪一份阅读器；缺省 = 当前活跃标签里的那一份"
+          }
+        ]
+      },
+      {
+        "id": "pdf-reader.fitPage",
+        "title": "适页",
+        "category": "PDF 阅读器",
+        "when": "activeEditor == 'pdf-reader'",
+        "description": "缩放档切成适页（整页可见，随窗口尺寸变化重算）。本来就是适页则回 noop ＋ reason=already-fit-page。回执同 pdf-reader.fitWidth。",
+        "params": [
+          {
+            "name": "args",
+            "type": "object",
+            "description": "{ sourceId? }——点名要切哪一份阅读器；缺省 = 当前活跃标签里的那一份"
+          }
+        ]
+      },
+      {
+        "id": "pdf-reader.setBackground",
+        "title": "设置阅读底色",
+        "category": "PDF 阅读器",
+        "when": "activeEditor == 'pdf-reader'",
+        "description": "设置阅读区底色：paper=纸白 ／ night=夜间（阅读区不跟壳主题，是用户拍板的有意例外）。档位非法回 ok:false ＋ reason=bad-bg；本来就是该档回 noop。回执 { ok, sourceId, field:\"bg\", previous, value }。",
+        "params": [
+          {
+            "name": "args",
+            "type": "object",
+            "description": "{ bg: \"paper\" | \"night\"（必填）, sourceId? }——例 { \"bg\": \"night\" }；也可逐位传 (\"night\")"
+          }
+        ]
+      },
+      {
+        "id": "pdf-reader.toggleSidebar",
+        "title": "切换缩略图侧栏",
+        "category": "PDF 阅读器",
+        "when": "activeEditor == 'pdf-reader'",
+        "description": "开关左侧缩略图侧栏（等于工具栏最左那颗钮）。回执带翻转**之后读回**的值 { ok, sourceId, field:\"sidebarOpen\", previous, value }——⛔ 别拿命令标题当读数。前提：已有一份打开的 PDF。",
+        "params": [
+          {
+            "name": "args",
+            "type": "object",
+            "description": "{ sourceId? }——点名要开合哪一份阅读器；缺省 = 当前活跃标签里的那一份"
+          }
+        ]
+      },
+      {
+        "id": "pdf-reader.getStatus",
+        "title": "读取阅读器状态",
+        "category": "PDF 阅读器",
+        "when": "activeEditor == 'pdf-reader'",
+        "description": "读当前阅读器的结构化状态——与状态条同源一份数据（当前页/总页数/倍率/缩放档/底色/侧栏开合）。回执 { ok, sourceId, hasDocument, currentPage, numPages, scale, zoomMode, bg, sidebarOpen, phase }。一份 PDF 都没打开时照样能读：回 ok:true ＋ hasDocument:false ＋ phase=\"none\"（空 ≠ 失败）；点名了却找不到才回 ok:false ＋ reason=bad-source（并列出有哪些）。",
+        "params": [
+          {
+            "name": "args",
+            "type": "object",
+            "description": "{ sourceId? }——点名要读哪一份阅读器；缺省 = 当前活跃标签里的那一份（一份都没有则回 hasDocument:false）"
+          }
+        ]
+      }
+    ]
   }
 }

@@ -7,9 +7,15 @@
  */
 
 import { useTranslation } from "react-i18next";
+import { registerReaderCommands } from "./commands";
 import ReaderView from "./views/ReaderView";
 import "./styles/tokens.css";
 import "./styles/reader.css";
+
+// T4 命令面——**入口顶层**注册（不是视图 mount 时）：这份 handler 不需要 store（目标在调用时
+// 才寻址），所以能早就早；池侧的 on-command 激活链会 import 本入口，于是「一份 pdf 都没开」
+// 时 exec 也能命中并拿到如实的 no-document 回执（而不是干撞 EUNKNOWN）。幂等。
+registerReaderCommands();
 
 export default function PdfReaderView({ sourceId }: { sourceId?: string }) {
   const { t } = useTranslation();

@@ -25,5 +25,14 @@
   "暂不支持打开受密码保护的文件。": "Password-protected files are not supported yet.",
   "读不到「{{name}}」——文件可能已被移走，或被别的程序占用。": "Couldn't read \"{{name}}\" — the file may have been moved or is locked by another program.",
   "打开方式…": "Open with…",
-  "在市场搜索阅读器": "Search the marketplace for a reader"
+  "在市场搜索阅读器": "Search the marketplace for a reader",
+  "设置缩放倍率": "Set zoom scale",
+  "设置阅读底色": "Set reading background",
+  "切换缩略图侧栏": "Toggle thumbnail sidebar",
+  "读取阅读器状态": "Read reader status",
+  "默认缩放": "Default zoom",
+  "打开 PDF 时的初始缩放档；你手动缩放过后本次阅读不再跟随它。": "Initial zoom mode when opening a PDF; once you zoom manually, this session no longer follows it.",
+  "适宽（按窗口宽度）": "Fit width (to window width)",
+  "适页（整页可见）": "Fit page (whole page visible)",
+  "100%（原始倍率）": "100% (original size)"
 }

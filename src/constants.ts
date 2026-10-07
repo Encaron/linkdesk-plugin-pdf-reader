@@ -25,3 +25,11 @@ export const PAGE_GAP = 16;
 export const READING_PAD = 24;
 /** 虚拟化缓冲：可视页 ±2 页（02-执行清单 T3 判据） */
 export const WINDOW_BUFFER = 2;
+
+// ── 命令化与配置（T4，21-插件命令化规范）──
+/** 本仓身份——命令 id 第一段（`check-command-ownership`：id 第一段必须 == pluginId）＋ 配置键第一段 */
+export const PLUGIN_ID = "pdf-reader";
+/** 命令面板/菜单里本插件命令的出现条件（读壳的宿主旗子；插件禁设宿主 contextKey——只读不写） */
+export const WHEN_PDF_ACTIVE = `activeEditor == '${PLUGIN_ID}'`;
+/** 配置键（`<pluginId>.<property>` 命名规则）——出厂缩放档，本插件唯一一条配置 */
+export const CONFIG_DEFAULT_ZOOM = `${PLUGIN_ID}.defaultZoom`;

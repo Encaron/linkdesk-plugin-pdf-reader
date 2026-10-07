@@ -1,7 +1,15 @@
 /** zoom 纯函数单测（替身零依赖，纯算术） */
 import { describe, expect, it } from "vitest";
 import { ZOOM_MAX, ZOOM_MIN } from "../constants";
-import { clampScale, fitPageScale, fitWidthScale, zoomInScale, zoomOutScale } from "../utils/zoom";
+import {
+  clampScale,
+  DEFAULT_ZOOM_MODE,
+  fitPageScale,
+  fitWidthScale,
+  parseDefaultZoom,
+  zoomInScale,
+  zoomOutScale,
+} from "../utils/zoom";
 
 describe("clampScale", () => {
   it("夹进 0.25–4.0", () => {
@@ -32,5 +40,25 @@ describe("fitWidthScale / fitPageScale", () => {
   it("非法输入回 1（不产 NaN）", () => {
     expect(fitWidthScale(0, 595)).toBe(1);
     expect(fitPageScale(100, 100, 0, 841)).toBe(1);
+  });
+});
+
+describe("parseDefaultZoom（配置项 pdf-reader.defaultZoom → 缩放档）", () => {
+  it("三个合法值原样认", () => {
+    expect(parseDefaultZoom("fitWidth")).toBe("fitWidth");
+    expect(parseDefaultZoom("fitPage")).toBe("fitPage");
+    expect(parseDefaultZoom("percent")).toBe("percent");
+  });
+  it("其余一切回出厂适宽（配置是用户手写的，坏值不该炸阅读器）", () => {
+    expect(parseDefaultZoom(undefined)).toBe(DEFAULT_ZOOM_MODE);
+    expect(parseDefaultZoom(null)).toBe(DEFAULT_ZOOM_MODE);
+    expect(parseDefaultZoom("")).toBe(DEFAULT_ZOOM_MODE);
+    expect(parseDefaultZoom("FitWidth")).toBe(DEFAULT_ZOOM_MODE); // 大小写不宽容（值面是契约）
+    expect(parseDefaultZoom("fit-width")).toBe(DEFAULT_ZOOM_MODE); // 连字符写法不是合法值
+    expect(parseDefaultZoom(1)).toBe(DEFAULT_ZOOM_MODE);
+    expect(parseDefaultZoom({ mode: "fitPage" })).toBe(DEFAULT_ZOOM_MODE);
+  });
+  it("出厂档就是用户拍板的 fitWidth", () => {
+    expect(DEFAULT_ZOOM_MODE).toBe("fitWidth");
   });
 });

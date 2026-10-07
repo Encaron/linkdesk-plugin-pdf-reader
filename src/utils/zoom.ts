@@ -4,6 +4,23 @@
  */
 import { ZOOM_MAX, ZOOM_MIN, ZOOM_STEP } from "../constants";
 
+/**
+ * 缩放档：百分比（自由倍率）｜适宽｜适页。
+ * 🔴 定义住本模块（域类型的唯一出处）——store 与工具栏经它取，⛔ 别在别处再写一遍这个联合类型。
+ */
+export type ZoomMode = "percent" | "fitWidth" | "fitPage";
+
+/** 出厂默认档（用户 2026-10-07 拍板：fitWidth）——配置读不到/值非法时都回落到它 */
+export const DEFAULT_ZOOM_MODE: ZoomMode = "fitWidth";
+
+/**
+ * 配置项 `pdf-reader.defaultZoom` 的取值 → 缩放档（T4）。
+ * 只认三个合法值，其余（undefined／拼错／旧值）一律回出厂 fitWidth——⛔ 不抛（配置是用户手写的，坏值不该炸阅读器）。
+ */
+export function parseDefaultZoom(value: unknown): ZoomMode {
+  return value === "fitPage" ? "fitPage" : value === "percent" ? "percent" : DEFAULT_ZOOM_MODE;
+}
+
 export function clampScale(scale: number): number {
   return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, scale));
 }
