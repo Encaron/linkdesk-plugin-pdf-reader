@@ -1,125 +1,35 @@
 {
-  // ─────────────────────────────────────────────────────────────────────────
-  //  LinkDesk 插件清单 plugin.json（由 create-linkdesk-plugin 生成）
-  //
-  //  · 本文件是 JSONC：可写注释、可尾逗号（LinkDesk 与 SDK 都按 jsonc 解析，对标 VS Code package.json）。
-  //  · 完整字段以 plugin.schema.json 为准——VS Code 读 $schema 自动补全 + 校验。
-  //  · $schema 指向本工程 node_modules/@linkdesk/plugin-sdk 随包拷贝（npm install 后生效）。
-  // ─────────────────────────────────────────────────────────────────────────
+  // 官方示例级 PDF 阅读器插件——单击 pdf 开真阅读器，卸载即退回（01-任务书 §四⑤ 声明面）。
+  // $schema 指向 @linkdesk/plugin-sdk 随包拷贝，VS Code 里可补全＋校验。
   "$schema": "./node_modules/@linkdesk/plugin-sdk/schemas/plugin.schema.json",
 
-  // ── 插件身份 ──
-  // 🔴 插件 ID：**显式声明**。它是安装目录名 / 卸载墓碑 / 更新对账的唯一键，**发布后永不可变**。
-  // 它与插件所在的目录名**无关**（目录可以随便改）——所以别拿目录名当它的替身。
-  // ⚠️ 且**不得以 `ldk-` 开头**：`ldk-` 是宿主与共享组件的命名空间，而你在 index.css 里的
-  //    类名前缀正是由它派生（`<pluginId>-你的类名`）——以 `ldk-` 开头 = 把自己的名字落进宿主空间。
+  // ── 插件身份（发布后永不可变）──
   "pluginId": "pdf-reader",
-  "name": "Pdf Reader", // 显示名——标签页 / 插件详情等 UI 出现处
-  "version": "0.1.0", // 语义化版本 x.y.z——市场更新比较靠它；+1 时务必同笔补 CHANGELOG.md 的新段
-  // ── 最低壳版本（minAppVersion）──
-  // 🔴 它是「**你的插件能在多旧的 LinkDesk 上跑**」的下限——不是「你装过 / 测过的壳版本」。
-  // 你从 @linkdesk/ui 每静态导入一个导出，就欠这个导出一个下限：旧壳里没有那个导出时，插件
-  // **整只加载失败**（不是「那个组件不显示」）。这个数不用你查表——工具按你实际导入的名字算：
-  // 改完代码跑一次 `npm run lint`，照它报的值改这一行。
-  // 本模板只静态导入了 HintTip（该导出自 0.2.20 起提供）⇒ 下面这个数就是算出来的地板。
-  "minAppVersion": "0.2.20",
-  "description": "Pdf Reader——我的第一个 LinkDesk 插件", // 一句话描述（插件详情页展示）
-  "author": "Encaron", // 作者名
-  // ── 图标——三图模型（完整规则见作者面 06 号《plugin.json 规范》§marketIcon）──
-  // icon = 界面小图标：标签页 [＋] 菜单 / 欢迎页等处（要进 42px 图标栏需再声明 appearsIn.iconBar；
-  //   ⚠️ 图标栏会对图强制单色染色——进图标栏的图要画单色线稿剪影，resources/icon-bar.svg 是预置占位）。
-  // marketIcon = 市场彩色身份图：市场列表行与详情页头部用（可选；缺省回落 icon）。
-  // cover = README 场景封面：只住 README 说明区，不是 manifest 字段（resources/cover.svg 已预置）。
-  "icon": "resources/icon.svg", // 占位图，换成你的
-  // "marketIcon": "resources/icon.svg", // 市场彩色身份图（可选；缺省回落 icon）——市场要彩色展示时取消注释
+  "name": "PDF 阅读器",
+  "version": "0.1.0",
+  // 0.2.32 = 本插件声明面（fileAssociations 路由）的壳版本下限；
+  // 引 @linkdesk/ui 后由 `npm run lint` 按实际导入重算地板。
+  "minAppVersion": "0.2.32",
+  "description": "单击 pdf 开真阅读器——渲染、翻页、缩放、搜索；卸载即退回。",
+  "author": "Encaron",
 
-  // ── 入口（视图插件 = 此文件 default 导出一个 React 组件）──
+  // 展示图标（案 A 红带文档，用户 2026-10-07 拍板定稿）——标签栏 / 市场 / 打开方式选择器 / README 共用这一份。
+  // 辅助型定位：无图标栏贡献（不声明 appearsIn.iconBar）。
+  "icon": "resources/icon.svg",
+
+  // ── 入口与出现位置 ──
   "entry": "src/index.tsx",
+  // 只开 tabBar（能力）——「开始」卡与 [+] 菜单不进（standaloneOpenable 缺省 false）：
+  // 本插件是「按资源打开」的编辑器型插件，没有文件可看时开空标签没有意义。
+  "appearsIn": { "tabBar": true },
+  // 同一文件多开归一个标签（与 editor 同口径）；非 singleton——两个 pdf 各开各的。
+  "tabBehavior": { "singleton": false, "identityField": "filePath" },
 
-  // ── 出现位置（appearsIn）——两件事分开声明 ──
-  // tabBar              = 这插件**能以标签页形态打开**（能力）
-  // standaloneOpenable  = 进欢迎页「开始」卡与标签栏 [+] 创建菜单的**准入**（白名单制，缺省 false；
-  //                       只管这两张菜单列不列，不影响命令 / 最近打开 / 会话恢复）
-  //   ⚠️ 本模板的入口自带界面（打开即有内容）⇒ 声明 true。若你的插件是「按资源打开」的编辑器
-  //      （要用户先选文件才有的看），**删掉这一行**——否则它会出现在「开始」卡里，点开却是个空标签。
-  //      完整判据见作者面 06 号《plugin.json 规范》§「开始」卡与 [+] 菜单准入。
-  "appearsIn": { "tabBar": true, "standaloneOpenable": true },
-  "tabBehavior": { "singleton": true }, // 全局只开一个实例，避免重复标签
-
-  // ── 贡献点（contributes：全部可选，按需增删）──
+  // ── 贡献点 ──
   "contributes": {
-    // ── 贡献点速查（每键一行，只指路不展开——完整语法与示例见作者面 03 号《contributes 规范》，落位见 17 号《区域地图》）──
-    // commands —— 注册命令：命令面板 / 右键菜单 / 快捷键 / 标题栏按钮的公共落脚点（id 用 "<pluginId>." 前缀防撞）
-    // keybindings —— 给命令绑快捷键：keys ＋ command ＋ when（上下文旗子，条件满足才触发）
-    // menus —— 菜单位声明（右键菜单走声明式，禁止手写右键菜单）
-    // configuration —— 声明设置项：设置页自动渲染一个分组（另见 20 号《我的插件加一条配置项》）
-    // titleBar —— 标题栏按钮：right[] / left[]，icon ＋ command（＋ when）
-    // viewsContainers / views —— 侧栏 / 底部面板的容器与视图（下面注释里有现成示例；容器 API 详见 08 号）
-    // themes / languages —— 主题包 / 语言包（数据型插件的载荷）
-    // iconThemes —— 图标主题（文件 / 文件夹图标集）：一份映射 JSON ＋ 一堆 SVG 的图像资产形态。
-    //   从上游 VS Code iconTheme 批量导入的命令见下面那段注释（⛔ 手写几百条不现实）
-    // floatingPanel —— 把你已有的某个视图声明成「可在悬浮面板打开」
-    // ⚠️ statusBar 不是 contributes 的键——它是 plugin.json **顶层**的 statusBar[] 数组（写进 contributes 无效，见 17 号 ⑦ 状态栏）
-    // 自带翻译：key=语言码, value=相对插件根的 JSON 文件。UI 文案用 t() 读这里；无需 zh.json——中文 key 原文自带兜底。
+    // 自带翻译：key = 中文原文，英译住本仓（谁的仓谁译文）。
     "i18n": { "en": "i18n/en.json" },
-    // ── 命令（模板自带一个能跑的样板：handler 在 src/commands.ts 注册，本声明就是它的显示面）──
-    //    id 用 "<pluginId>." 前缀防撞；🔴 description 必写——命令索引 / 命令面板 / AI 选命令
-    //    全靠这一句，写「做什么 + 参数怎么给」，别写「这是一条命令」。
-    //    params 与 handler 实参逐位对应；改命令时 plugin.json 与 src/commands.ts 同笔改。
-    "commands": [
-      {
-        "id": "pdf-reader.hello",
-        "title": "打招呼",
-        "description": "返回一句问候（本插件的命令样板）。可无参数执行（向 world 问好），也可给 { name } 指定对象；返回 { message, plugin } 读数。",
-        "params": [
-          { "name": "args", "type": "object", "required": false, "description": "{ name?: string }——向谁问好；省略 = world" }
-        ]
-      }
-    ],
-    // ── 需要「侧栏 / 底部面板 / 辅助侧栏」分区视图时：取消注释，在 src/views/ 放对应组件，
-    //    容器 key 与 view id 用你的 pluginId 做前缀防撞──
-    // "viewsContainers": { "pdf-reader-sidebar": { "title": "Pdf Reader", "location": "sidebar" } },
-    // "views": {
-    //   "pdf-reader-sidebar": [
-    //     { "id": "main", "title": "Pdf Reader", "render": "src/views/MainView.tsx", "order": 0 }
-    //   ]
-    // }
-    // ── 设置项（configuration）——设置页自动渲染一个分组（完整语法见作者面 20 号《我的插件加一条配置项》）──
-    //    🔴 每条配置项都要带 "title"（行名短名 = 设置页/市场功能页显示的**人话名**，缺了只能裸显英文配置键，
-    //       SDK 黄灯门禁 ci-verify ⑨ 段会列单催补）：≤12 字名词短语、去插件前缀；值域惯例与 description 同——
-    //       中文原文即 i18n key，英译进本仓 i18n/en.json（谁声明谁供译）。未声明 title 的行回退显配置键
-    //       （第三方存量兼容），但你的插件应该一条不缺。样例（取消注释即用，随附把译名补进 i18n/en.json）：
-    // "configuration": {
-    //   "title": "示例设置",
-    //   "properties": {
-    //     "pdf-reader.sampleToggle": {
-    //       "type": "boolean",
-    //       "default": true,
-    //       "title": "示例开关",
-    //       "description": "模板自带的设置项样例——照它的 title 写法换成你自己的配置项"
-    //     }
-    //   }
-    // }
-
-    // ── 图标主题（iconThemes）——「文件图标集」这一类数据型载荷（完整规范见作者面 03 号 §3.7）──
-    //   产物两部分：① 映射 JSON（四张表 files / extensions / folders / foldersExpanded ＋ 五枚顶层默认图标）
-    //   ② 被映射引用的 SVG 资产。映射格式契约 = node_modules/@linkdesk/plugin-sdk/schemas/icon-theme.schema.json
-    //   （首行写 "$schema" 指它，编辑器就有补全与校验）。
-    //   🔴 **手写几百条映射不现实** —— 从上游 VS Code iconTheme 批量导入（material-icon-theme / vscode-icons 等）：
-    //     npm pack material-icon-theme && tar xzf material-icon-theme-*.tgz
-    //     npx @linkdesk/plugin-sdk import-icon-theme package/dist/material-icons.json \
-    //       --name material --out icons/material.json --assets icons/material --list icon-import.json
-    //   命令只拷「被映射引用」的 SVG（上游整包上千个），跑完会打印一段可粘贴的 contributions 片段。
-    //   🔴 **选哪些图标是你的编辑决定** ⇒ 写进本仓 `icon-import.json`（随仓评审 / 回溯 / 重跑），别塞进命令行；
-    //      不传 --list 就是导入上游声明的全部映射（从零起步的默认路径）。
-    //   ⚠️ 装完记得把**上游的 LICENSE** 一并放进本仓（图标包多为 MIT——署名是你的事，命令不代做）。
-    //   ⚠️ id 是**注册键**：用户把选中的 id 存进设置（app.iconTheme），发布后改名 = 让老用户的选择失效
-    //      ⇒ 一次定好；加本插件前缀防撞（`<pluginId>.<本地名>`）。⛔ **不许叫 `default`**——那是壳的兜底 id，
-    //      占用它 = 卸载后主题失效（判红，见作者面 03 号 §3.7 id 命名规则）。
-    //   ⚠️ label 是**可渲染串**：设置下拉里显示的就是它 ⇒ 中文字面量写在这里，英译进本仓 i18n/en.json
-    //      （漏译由 SDK lint / ci-verify 判红）。样例（取消注释即用）：
-    // "iconThemes": [
-    //   { "id": "pdf-reader.icons-material", "label": "Material 图标", "path": "icons/material.json" }
-    // ]
-  },
+    // 一行声明接管 pdf 单击与 OS 打开方式（不带 role——pdf 是二进制，不是 text-fallback 的地盘）。
+    "fileAssociations": [{ "extension": "pdf", "displayName": "PDF" }]
+  }
 }

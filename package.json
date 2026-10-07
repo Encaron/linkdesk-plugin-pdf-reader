@@ -5,7 +5,7 @@
   "description": "Pdf Reader——LinkDesk 插件（由 create-linkdesk-plugin 生成）",
   "type": "module",
   "dependencies": {
-    "@linkdesk/ui": "latest"
+    "@linkdesk/ui": "0.2.56"
   },
   "scripts": {
     "dev": "linkdesk-plugin-sdk dev",
