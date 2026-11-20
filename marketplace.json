@@ -1,23 +1,33 @@
 {
   "version": "1",
-  "updatedAt": "2026-10-07T17:38:17.416Z",
+  "updatedAt": "2026-11-20T11:48:42.810Z",
   "plugins": [
     {
       "id": "pdf-reader",
       "name": "PDF 阅读器",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "description": "单击 pdf 开真阅读器——渲染、翻页、缩放、搜索；卸载即退回。",
       "author": {
         "name": "Encaron"
       },
-      "icon": "https://raw.githubusercontent.com/Encaron/linkdesk-plugin-pdf-reader/v0.1.1/resources/icon.svg",
+      "icon": "https://raw.githubusercontent.com/Encaron/linkdesk-plugin-pdf-reader/v0.1.2/resources/icon.svg",
       "iconSource": "url",
       "minAppVersion": "0.2.32",
-      "readmeUrl": "https://raw.githubusercontent.com/Encaron/linkdesk-plugin-pdf-reader/v0.1.1/README.md",
-      "downloadUrl": "https://github.com/Encaron/linkdesk-plugin-pdf-reader/releases/download/v0.1.1/pdf-reader.linkdesk-plugin",
-      "size": 2160083,
-      "publishedAt": "2026-10-07T17:38:17.416Z",
+      "category": "documents",
+      "categories": [
+        "viewer"
+      ],
+      "readmeUrl": "https://raw.githubusercontent.com/Encaron/linkdesk-plugin-pdf-reader/v0.1.2/README.md",
+      "downloadUrl": "https://github.com/Encaron/linkdesk-plugin-pdf-reader/releases/download/v0.1.2/pdf-reader.linkdesk-plugin",
+      "size": 2160239,
+      "publishedAt": "2026-11-20T11:48:42.810Z",
       "versions": [
+        {
+          "version": "0.1.2",
+          "downloadUrl": "https://github.com/Encaron/linkdesk-plugin-pdf-reader/releases/download/v0.1.2/pdf-reader.linkdesk-plugin",
+          "publishedAt": "2026-11-20T11:48:42.810Z",
+          "changelog": "- **分类声明（R4-2.8/2.9）**：`plugin.json` 顶层补 `category: \"documents\"` ＋ `categories: [\"viewer\"]`——商店分类抽屉归位，随本次发版进入官方目录条目。\n\n<!-- 写法约定（别改格式——LinkDesk 市场按它切段）：\n     · 段标题固定 `## v<版本>（<日期>）`，版本号必须与 plugin.json 的 version 逐字相同。\n     · 每次在 plugin.json 里 +1 版本号，就必须在同一笔加上对应的新段——只改版本不写段，\n       市场里这一版会显示「此版本未提供变更说明」。\n     · 从新到旧排列，最新的一段在最上面。 -->"
+        },
         {
           "version": "0.1.1",
           "downloadUrl": "https://github.com/Encaron/linkdesk-plugin-pdf-reader/releases/download/v0.1.1/pdf-reader.linkdesk-plugin",
