@@ -12,6 +12,10 @@
       },
       "icon": "https://raw.githubusercontent.com/Encaron/linkdesk-plugin-pdf-reader/v0.1.2/resources/icon.svg",
       "iconSource": "url",
+      "cover": "https://raw.githubusercontent.com/Encaron/linkdesk-plugin-pdf-reader/HEAD/resources/cover.svg",
+      "screenshots": [
+        "https://raw.githubusercontent.com/Encaron/linkdesk-plugin-pdf-reader/HEAD/resources/cover.svg"
+      ],
       "minAppVersion": "0.2.32",
       "category": "documents",
       "categories": [
