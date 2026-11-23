@@ -34,8 +34,8 @@
 }
 
 .pdf-reader-tbtn {
-  width: 28px;
-  height: 28px;
+  width: var(--size-control-md, 28px);
+  height: var(--size-control-md, 28px);
   flex: none;
   display: flex;
   align-items: center;
@@ -62,7 +62,7 @@
 }
 
 .pdf-reader-tbtn-wide {
-  height: 28px;
+  height: var(--size-control-md, 28px);
   padding: 0 8px;
   border: none;
   background: transparent;
@@ -87,7 +87,7 @@
 }
 
 .pdf-reader-pagebox {
-  height: 28px;
+  height: var(--size-control-md, 28px);
   min-width: 74px;
   box-sizing: border-box;
   padding: 0 8px;
@@ -104,7 +104,7 @@
 }
 
 .pdf-reader-pct {
-  height: 28px;
+  height: var(--size-control-md, 28px);
   min-width: 44px;
   padding: 0 6px;
   border: none;
@@ -468,8 +468,8 @@
 }
 
 .pdf-reader-search-btn {
-  width: 24px;
-  height: 24px;
+  width: var(--size-control-sm, 24px);
+  height: var(--size-control-sm, 24px);
   flex: none;
   display: flex;
   align-items: center;
