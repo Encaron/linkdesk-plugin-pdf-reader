@@ -43,7 +43,7 @@
   padding: 0;
   border: none;
   background: transparent;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   color: var(--text-secondary);
   cursor: pointer;
   transition: background-color 150ms ease, color 150ms ease;
@@ -66,7 +66,7 @@
   padding: 0 8px;
   border: none;
   background: transparent;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   font-size: var(--font-size-xs);
   color: var(--text-secondary);
   cursor: pointer;
@@ -96,7 +96,7 @@
   color: var(--text-primary);
   background: var(--bg-input);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-md);
 }
 .pdf-reader-pagebox:focus {
   outline: none;
@@ -109,7 +109,7 @@
   padding: 0 6px;
   border: none;
   background: transparent;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   font-size: var(--font-size-xs);
   color: var(--text-secondary);
   cursor: pointer;
@@ -155,7 +155,7 @@
   box-sizing: border-box;
   background: var(--pdf-bg-page);
   border: 1px solid var(--pdf-border-page);
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
   box-shadow: var(--shadow-hairline);
   overflow: hidden;
 }
@@ -184,7 +184,7 @@
 .pdf-reader-loading-card {
   width: 190px;
   height: 110px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--pdf-bg-page);
   border: 1px solid var(--pdf-border-page);
   animation: pdf-reader-loading-pulse 1.4s ease-in-out infinite;
@@ -201,7 +201,7 @@
 .pdf-reader-loading-bar {
   width: 190px;
   height: 4px;
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
   background: var(--pdf-border-page);
   overflow: hidden;
   position: relative;
@@ -392,7 +392,7 @@
  * 「我在第几处」，不只靠色相）。
  */
 .pdf-reader-hit {
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
   background: color-mix(in srgb, var(--pdf-hit) 55%, transparent);
 }
 .pdf-reader-hit-current {
@@ -550,7 +550,7 @@
   padding: 0;
   border: none;
   background: transparent;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   color: var(--pdf-ink-muted);
   cursor: pointer;
   transition: background-color 150ms ease, color 150ms ease;
@@ -583,7 +583,7 @@
   padding: 2px 4px;
   border: none;
   background: transparent;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   text-align: left;
   font-size: var(--font-size-xs);
   color: var(--pdf-ink-ui);
@@ -626,7 +626,7 @@
   justify-content: center;
   padding: 0;
   border: 1px solid var(--pdf-border-page);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   background: var(--pdf-bg-page);
   box-shadow: var(--shadow-hairline);
   overflow: hidden;
