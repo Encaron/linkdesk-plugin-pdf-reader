@@ -1,5 +1,9 @@
 # 更新日志
 
+## v0.1.3（2026-11-23）
+
+- 控件高度接宿主 `--size-control-*`、圆角改吃 `--radius-*`（均带 fallback，零视觉）
+
 ## v0.1.2（2026-11-20）
 
 - **分类声明（R4-2.8/2.9）**：`plugin.json` 顶层补 `category: "documents"` ＋ `categories: ["viewer"]`——商店分类抽屉归位，随本次发版进入官方目录条目。
