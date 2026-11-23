@@ -6,7 +6,7 @@
   // ── 插件身份（发布后永不可变）──
   "pluginId": "pdf-reader",
   "name": "PDF 阅读器",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "category": "documents",
   "categories": ["viewer"],
   // 0.2.32 = 本插件声明面（fileAssociations 路由）的壳版本下限；
@@ -234,5 +234,12 @@
         ]
       }
     ]
+  },
+  "readme": {
+    "default": "README.md",
+    "locales": {
+      "zh": "README.md",
+      "en": "docs/readme/en.md"
+    }
   }
 }
