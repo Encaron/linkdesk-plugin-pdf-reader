@@ -1,31 +1,33 @@
 {
   "version": "1",
-  "updatedAt": "2026-11-20T11:48:42.810Z",
+  "updatedAt": "2026-11-23T13:49:29.417Z",
   "plugins": [
     {
       "id": "pdf-reader",
       "name": "PDF 阅读器",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "description": "单击 pdf 开真阅读器——渲染、翻页、缩放、搜索；卸载即退回。",
       "author": {
         "name": "Encaron"
       },
-      "icon": "https://raw.githubusercontent.com/Encaron/linkdesk-plugin-pdf-reader/v0.1.2/resources/icon.svg",
+      "icon": "https://raw.githubusercontent.com/Encaron/linkdesk-plugin-pdf-reader/v0.1.3/resources/icon.svg",
       "iconSource": "url",
-      "cover": "https://raw.githubusercontent.com/Encaron/linkdesk-plugin-pdf-reader/HEAD/resources/cover.svg",
-      "screenshots": [
-        "https://raw.githubusercontent.com/Encaron/linkdesk-plugin-pdf-reader/HEAD/resources/cover.svg"
-      ],
       "minAppVersion": "0.2.32",
       "category": "documents",
       "categories": [
         "viewer"
       ],
-      "readmeUrl": "https://raw.githubusercontent.com/Encaron/linkdesk-plugin-pdf-reader/v0.1.2/README.md",
-      "downloadUrl": "https://github.com/Encaron/linkdesk-plugin-pdf-reader/releases/download/v0.1.2/pdf-reader.linkdesk-plugin",
-      "size": 2160239,
-      "publishedAt": "2026-11-20T11:48:42.810Z",
+      "readmeUrl": "https://raw.githubusercontent.com/Encaron/linkdesk-plugin-pdf-reader/v0.1.3/README.md",
+      "downloadUrl": "https://github.com/Encaron/linkdesk-plugin-pdf-reader/releases/download/v0.1.3/pdf-reader.linkdesk-plugin",
+      "size": 2160315,
+      "publishedAt": "2026-11-23T13:49:29.417Z",
       "versions": [
+        {
+          "version": "0.1.3",
+          "downloadUrl": "https://github.com/Encaron/linkdesk-plugin-pdf-reader/releases/download/v0.1.3/pdf-reader.linkdesk-plugin",
+          "publishedAt": "2026-11-23T13:49:29.417Z",
+          "changelog": "- 控件高度接宿主 `--size-control-*`、圆角改吃 `--radius-*`（均带 fallback，零视觉）"
+        },
         {
           "version": "0.1.2",
           "downloadUrl": "https://github.com/Encaron/linkdesk-plugin-pdf-reader/releases/download/v0.1.2/pdf-reader.linkdesk-plugin",
