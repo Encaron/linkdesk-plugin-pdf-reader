@@ -6,7 +6,7 @@
   // ── 插件身份（发布后永不可变）──
   "pluginId": "pdf-reader",
   "name": "PDF 阅读器",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "category": "documents",
   "categories": ["viewer"],
   // 0.2.32 = 本插件声明面（fileAssociations 路由）的壳版本下限；
@@ -67,6 +67,64 @@
     "commands": [
       {
         "id": "pdf-reader.pageNext",
+        "risk": "R1",
+        "activation": "entry",
+        "returns": [
+          {
+            "name": "ok",
+            "type": "boolean",
+            "description": "True when the call took effect"
+          },
+          {
+            "name": "noop",
+            "type": "boolean",
+            "optional": true,
+            "description": "Present when nothing changed but it is not a failure"
+          },
+          {
+            "name": "reason",
+            "type": "string",
+            "optional": true,
+            "description": "Machine-readable no-op/error reason"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "optional": true,
+            "description": "Human/AI readable explanation"
+          },
+          {
+            "name": "sourceId",
+            "type": "string",
+            "optional": true,
+            "description": "Target reader path"
+          },
+          {
+            "name": "field",
+            "type": "string",
+            "optional": true,
+            "description": "currentPage"
+          },
+          {
+            "name": "previous",
+            "type": "number",
+            "optional": true,
+            "description": "Page before the call"
+          },
+          {
+            "name": "value",
+            "type": "number",
+            "optional": true,
+            "description": "Page after the call"
+          },
+          {
+            "name": "numPages",
+            "type": "number",
+            "optional": true,
+            "description": "Total pages"
+          }
+        ],
+        "example": {},
         "title": "下一页",
         "category": "PDF 阅读器",
         "when": "activeEditor == 'pdf-reader'",
@@ -81,6 +139,64 @@
       },
       {
         "id": "pdf-reader.pagePrev",
+        "risk": "R1",
+        "activation": "entry",
+        "returns": [
+          {
+            "name": "ok",
+            "type": "boolean",
+            "description": "True when the call took effect"
+          },
+          {
+            "name": "noop",
+            "type": "boolean",
+            "optional": true,
+            "description": "Present when nothing changed but it is not a failure"
+          },
+          {
+            "name": "reason",
+            "type": "string",
+            "optional": true,
+            "description": "Machine-readable no-op/error reason"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "optional": true,
+            "description": "Human/AI readable explanation"
+          },
+          {
+            "name": "sourceId",
+            "type": "string",
+            "optional": true,
+            "description": "Target reader path"
+          },
+          {
+            "name": "field",
+            "type": "string",
+            "optional": true,
+            "description": "currentPage"
+          },
+          {
+            "name": "previous",
+            "type": "number",
+            "optional": true,
+            "description": "Page before the call"
+          },
+          {
+            "name": "value",
+            "type": "number",
+            "optional": true,
+            "description": "Page after the call"
+          },
+          {
+            "name": "numPages",
+            "type": "number",
+            "optional": true,
+            "description": "Total pages"
+          }
+        ],
+        "example": {},
         "title": "上一页",
         "category": "PDF 阅读器",
         "when": "activeEditor == 'pdf-reader'",
@@ -95,6 +211,66 @@
       },
       {
         "id": "pdf-reader.gotoPage",
+        "risk": "R1",
+        "activation": "entry",
+        "returns": [
+          {
+            "name": "ok",
+            "type": "boolean",
+            "description": "True when the call took effect"
+          },
+          {
+            "name": "noop",
+            "type": "boolean",
+            "optional": true,
+            "description": "Present when nothing changed but it is not a failure"
+          },
+          {
+            "name": "reason",
+            "type": "string",
+            "optional": true,
+            "description": "Machine-readable no-op/error reason"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "optional": true,
+            "description": "Human/AI readable explanation"
+          },
+          {
+            "name": "sourceId",
+            "type": "string",
+            "optional": true,
+            "description": "Target reader path"
+          },
+          {
+            "name": "field",
+            "type": "string",
+            "optional": true,
+            "description": "currentPage"
+          },
+          {
+            "name": "previous",
+            "type": "number",
+            "optional": true,
+            "description": "Page before the call"
+          },
+          {
+            "name": "value",
+            "type": "number",
+            "optional": true,
+            "description": "Page after the call"
+          },
+          {
+            "name": "numPages",
+            "type": "number",
+            "optional": true,
+            "description": "Total pages"
+          }
+        ],
+        "example": {
+          "page": 3
+        },
         "title": "跳转到指定页",
         "category": "PDF 阅读器",
         "when": "activeEditor == 'pdf-reader'",
@@ -109,6 +285,64 @@
       },
       {
         "id": "pdf-reader.zoomIn",
+        "risk": "R1",
+        "activation": "entry",
+        "returns": [
+          {
+            "name": "ok",
+            "type": "boolean",
+            "description": "True when the call took effect"
+          },
+          {
+            "name": "noop",
+            "type": "boolean",
+            "optional": true,
+            "description": "Present when nothing changed but it is not a failure"
+          },
+          {
+            "name": "reason",
+            "type": "string",
+            "optional": true,
+            "description": "Machine-readable no-op/error reason"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "optional": true,
+            "description": "Human/AI readable explanation"
+          },
+          {
+            "name": "sourceId",
+            "type": "string",
+            "optional": true,
+            "description": "Target reader path"
+          },
+          {
+            "name": "field",
+            "type": "string",
+            "optional": true,
+            "description": "scale"
+          },
+          {
+            "name": "previous",
+            "type": "number",
+            "optional": true,
+            "description": "Scale before"
+          },
+          {
+            "name": "value",
+            "type": "number",
+            "optional": true,
+            "description": "Scale after"
+          },
+          {
+            "name": "zoomMode",
+            "type": "string",
+            "optional": true,
+            "description": "Zoom mode after"
+          }
+        ],
+        "example": {},
         "title": "放大",
         "category": "PDF 阅读器",
         "when": "activeEditor == 'pdf-reader'",
@@ -123,6 +357,64 @@
       },
       {
         "id": "pdf-reader.zoomOut",
+        "risk": "R1",
+        "activation": "entry",
+        "returns": [
+          {
+            "name": "ok",
+            "type": "boolean",
+            "description": "True when the call took effect"
+          },
+          {
+            "name": "noop",
+            "type": "boolean",
+            "optional": true,
+            "description": "Present when nothing changed but it is not a failure"
+          },
+          {
+            "name": "reason",
+            "type": "string",
+            "optional": true,
+            "description": "Machine-readable no-op/error reason"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "optional": true,
+            "description": "Human/AI readable explanation"
+          },
+          {
+            "name": "sourceId",
+            "type": "string",
+            "optional": true,
+            "description": "Target reader path"
+          },
+          {
+            "name": "field",
+            "type": "string",
+            "optional": true,
+            "description": "scale"
+          },
+          {
+            "name": "previous",
+            "type": "number",
+            "optional": true,
+            "description": "Scale before"
+          },
+          {
+            "name": "value",
+            "type": "number",
+            "optional": true,
+            "description": "Scale after"
+          },
+          {
+            "name": "zoomMode",
+            "type": "string",
+            "optional": true,
+            "description": "Zoom mode after"
+          }
+        ],
+        "example": {},
         "title": "缩小",
         "category": "PDF 阅读器",
         "when": "activeEditor == 'pdf-reader'",
@@ -137,6 +429,66 @@
       },
       {
         "id": "pdf-reader.zoomTo",
+        "risk": "R1",
+        "activation": "entry",
+        "returns": [
+          {
+            "name": "ok",
+            "type": "boolean",
+            "description": "True when the call took effect"
+          },
+          {
+            "name": "noop",
+            "type": "boolean",
+            "optional": true,
+            "description": "Present when nothing changed but it is not a failure"
+          },
+          {
+            "name": "reason",
+            "type": "string",
+            "optional": true,
+            "description": "Machine-readable no-op/error reason"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "optional": true,
+            "description": "Human/AI readable explanation"
+          },
+          {
+            "name": "sourceId",
+            "type": "string",
+            "optional": true,
+            "description": "Target reader path"
+          },
+          {
+            "name": "field",
+            "type": "string",
+            "optional": true,
+            "description": "scale"
+          },
+          {
+            "name": "previous",
+            "type": "number",
+            "optional": true,
+            "description": "Scale before"
+          },
+          {
+            "name": "value",
+            "type": "number",
+            "optional": true,
+            "description": "Scale after"
+          },
+          {
+            "name": "zoomMode",
+            "type": "string",
+            "optional": true,
+            "description": "Zoom mode after"
+          }
+        ],
+        "example": {
+          "scale": 1.5
+        },
         "title": "设置缩放倍率",
         "category": "PDF 阅读器",
         "when": "activeEditor == 'pdf-reader'",
@@ -151,6 +503,64 @@
       },
       {
         "id": "pdf-reader.fitWidth",
+        "risk": "R1",
+        "activation": "entry",
+        "returns": [
+          {
+            "name": "ok",
+            "type": "boolean",
+            "description": "True when the call took effect"
+          },
+          {
+            "name": "noop",
+            "type": "boolean",
+            "optional": true,
+            "description": "Present when nothing changed but it is not a failure"
+          },
+          {
+            "name": "reason",
+            "type": "string",
+            "optional": true,
+            "description": "Machine-readable no-op/error reason"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "optional": true,
+            "description": "Human/AI readable explanation"
+          },
+          {
+            "name": "sourceId",
+            "type": "string",
+            "optional": true,
+            "description": "Target reader path"
+          },
+          {
+            "name": "field",
+            "type": "string",
+            "optional": true,
+            "description": "zoomMode"
+          },
+          {
+            "name": "previous",
+            "type": "string",
+            "optional": true,
+            "description": "Zoom mode before"
+          },
+          {
+            "name": "value",
+            "type": "string",
+            "optional": true,
+            "description": "Zoom mode after"
+          },
+          {
+            "name": "scale",
+            "type": "number",
+            "optional": true,
+            "description": "Scale after"
+          }
+        ],
+        "example": {},
         "title": "适宽",
         "category": "PDF 阅读器",
         "when": "activeEditor == 'pdf-reader'",
@@ -165,6 +575,64 @@
       },
       {
         "id": "pdf-reader.fitPage",
+        "risk": "R1",
+        "activation": "entry",
+        "returns": [
+          {
+            "name": "ok",
+            "type": "boolean",
+            "description": "True when the call took effect"
+          },
+          {
+            "name": "noop",
+            "type": "boolean",
+            "optional": true,
+            "description": "Present when nothing changed but it is not a failure"
+          },
+          {
+            "name": "reason",
+            "type": "string",
+            "optional": true,
+            "description": "Machine-readable no-op/error reason"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "optional": true,
+            "description": "Human/AI readable explanation"
+          },
+          {
+            "name": "sourceId",
+            "type": "string",
+            "optional": true,
+            "description": "Target reader path"
+          },
+          {
+            "name": "field",
+            "type": "string",
+            "optional": true,
+            "description": "zoomMode"
+          },
+          {
+            "name": "previous",
+            "type": "string",
+            "optional": true,
+            "description": "Zoom mode before"
+          },
+          {
+            "name": "value",
+            "type": "string",
+            "optional": true,
+            "description": "Zoom mode after"
+          },
+          {
+            "name": "scale",
+            "type": "number",
+            "optional": true,
+            "description": "Scale after"
+          }
+        ],
+        "example": {},
         "title": "适页",
         "category": "PDF 阅读器",
         "when": "activeEditor == 'pdf-reader'",
@@ -179,6 +647,60 @@
       },
       {
         "id": "pdf-reader.setBackground",
+        "risk": "R1",
+        "activation": "entry",
+        "returns": [
+          {
+            "name": "ok",
+            "type": "boolean",
+            "description": "True when the call took effect"
+          },
+          {
+            "name": "noop",
+            "type": "boolean",
+            "optional": true,
+            "description": "Present when nothing changed but it is not a failure"
+          },
+          {
+            "name": "reason",
+            "type": "string",
+            "optional": true,
+            "description": "Machine-readable no-op/error reason"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "optional": true,
+            "description": "Human/AI readable explanation"
+          },
+          {
+            "name": "sourceId",
+            "type": "string",
+            "optional": true,
+            "description": "Target reader path"
+          },
+          {
+            "name": "field",
+            "type": "string",
+            "optional": true,
+            "description": "Flipped field"
+          },
+          {
+            "name": "previous",
+            "type": "unknown",
+            "optional": true,
+            "description": "Value before"
+          },
+          {
+            "name": "value",
+            "type": "unknown",
+            "optional": true,
+            "description": "Value after"
+          }
+        ],
+        "example": {
+          "bg": "night"
+        },
         "title": "设置阅读底色",
         "category": "PDF 阅读器",
         "when": "activeEditor == 'pdf-reader'",
@@ -193,6 +715,58 @@
       },
       {
         "id": "pdf-reader.toggleSidebar",
+        "risk": "R1",
+        "activation": "entry",
+        "returns": [
+          {
+            "name": "ok",
+            "type": "boolean",
+            "description": "True when the call took effect"
+          },
+          {
+            "name": "noop",
+            "type": "boolean",
+            "optional": true,
+            "description": "Present when nothing changed but it is not a failure"
+          },
+          {
+            "name": "reason",
+            "type": "string",
+            "optional": true,
+            "description": "Machine-readable no-op/error reason"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "optional": true,
+            "description": "Human/AI readable explanation"
+          },
+          {
+            "name": "sourceId",
+            "type": "string",
+            "optional": true,
+            "description": "Target reader path"
+          },
+          {
+            "name": "field",
+            "type": "string",
+            "optional": true,
+            "description": "Flipped field"
+          },
+          {
+            "name": "previous",
+            "type": "unknown",
+            "optional": true,
+            "description": "Value before"
+          },
+          {
+            "name": "value",
+            "type": "unknown",
+            "optional": true,
+            "description": "Value after"
+          }
+        ],
+        "example": {},
         "title": "切换缩略图侧栏",
         "category": "PDF 阅读器",
         "when": "activeEditor == 'pdf-reader'",
@@ -207,6 +781,58 @@
       },
       {
         "id": "pdf-reader.openSearch",
+        "risk": "R1",
+        "activation": "entry",
+        "returns": [
+          {
+            "name": "ok",
+            "type": "boolean",
+            "description": "True when the call took effect"
+          },
+          {
+            "name": "noop",
+            "type": "boolean",
+            "optional": true,
+            "description": "Present when nothing changed but it is not a failure"
+          },
+          {
+            "name": "reason",
+            "type": "string",
+            "optional": true,
+            "description": "Machine-readable no-op/error reason"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "optional": true,
+            "description": "Human/AI readable explanation"
+          },
+          {
+            "name": "sourceId",
+            "type": "string",
+            "optional": true,
+            "description": "Target reader path"
+          },
+          {
+            "name": "field",
+            "type": "string",
+            "optional": true,
+            "description": "Flipped field"
+          },
+          {
+            "name": "previous",
+            "type": "unknown",
+            "optional": true,
+            "description": "Value before"
+          },
+          {
+            "name": "value",
+            "type": "unknown",
+            "optional": true,
+            "description": "Value after"
+          }
+        ],
+        "example": {},
         "title": "搜索",
         "category": "PDF 阅读器",
         "when": "activeEditor == 'pdf-reader'",
@@ -221,6 +847,111 @@
       },
       {
         "id": "pdf-reader.getStatus",
+        "risk": "R0",
+        "activation": "entry",
+        "returns": [
+          {
+            "name": "ok",
+            "type": "boolean",
+            "description": "True when the call took effect"
+          },
+          {
+            "name": "noop",
+            "type": "boolean",
+            "optional": true,
+            "description": "Present when nothing changed but it is not a failure"
+          },
+          {
+            "name": "reason",
+            "type": "string",
+            "optional": true,
+            "description": "Machine-readable no-op/error reason"
+          },
+          {
+            "name": "error",
+            "type": "string",
+            "optional": true,
+            "description": "Human/AI readable explanation"
+          },
+          {
+            "name": "sourceId",
+            "type": "string",
+            "optional": true,
+            "description": "Target reader path"
+          },
+          {
+            "name": "hasDocument",
+            "type": "boolean",
+            "optional": true,
+            "description": "Whether a reader is mounted"
+          },
+          {
+            "name": "phase",
+            "type": "string",
+            "description": "ready | loading | error | none"
+          },
+          {
+            "name": "currentPage",
+            "type": "number",
+            "optional": true,
+            "description": "Current page"
+          },
+          {
+            "name": "numPages",
+            "type": "number",
+            "optional": true,
+            "description": "Total pages"
+          },
+          {
+            "name": "scale",
+            "type": "number",
+            "optional": true,
+            "description": "Current scale"
+          },
+          {
+            "name": "zoomMode",
+            "type": "string",
+            "optional": true,
+            "description": "Zoom mode"
+          },
+          {
+            "name": "bg",
+            "type": "string",
+            "optional": true,
+            "description": "paper | night"
+          },
+          {
+            "name": "sidebarOpen",
+            "type": "boolean",
+            "optional": true,
+            "description": "Sidebar state"
+          },
+          {
+            "name": "searchOpen",
+            "type": "boolean",
+            "optional": true,
+            "description": "Search bar state"
+          },
+          {
+            "name": "searchQuery",
+            "type": "string",
+            "optional": true,
+            "description": "Current search query"
+          },
+          {
+            "name": "searchHits",
+            "type": "number",
+            "optional": true,
+            "description": "Search hit count"
+          },
+          {
+            "name": "searchCurrent",
+            "type": "number",
+            "optional": true,
+            "description": "Current hit index"
+          }
+        ],
+        "example": {},
         "title": "读取阅读器状态",
         "category": "PDF 阅读器",
         "when": "activeEditor == 'pdf-reader'",
